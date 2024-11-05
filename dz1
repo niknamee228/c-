@@ -1,0 +1,46 @@
+#include <iostream>
+using namespace std;
+#include "math.h"
+#include "string"
+/*int main()
+{
+double r1,r2,r3,r;
+cout<<"vedite soprotivlenie r1";cin>>r1;
+cout<<"vedite soprotivlenie r2";cin>>r2;
+cout<<"vedite soprotivlenie r3";cin>>r3;
+cout<<"symma soprotivlenie"<<1/ (1/r1+1/r2+1/r3)<<endl;
+
+
+    return 0;
+}
+*/
+/*   using namespace std;                
+int main(int argc, char* argv[])                
+{                
+   	double x1,x2,y1,y2,distance;              
+
+        cout <<"Введите координату x1:"<<endl;             
+        cin>>x1;                     
+        cout <<"Введите координату y1:"<<endl;             
+        cin>>y1;             
+        cout <<"Введите координату x2:"<<endl;             
+        cin>>x2;             
+        cout <<"Введите координату y2:"<<endl;             
+        cin>>y2;                              distance=sqrt(pow((x2-x1),2)+pow((y2-y1),2));    
+	cout<<"Расстояние между двумя точками:"<<distance<<endl;                
+}
+*/
+ /* #include <iostream>
+using namespace std;
+int main()
+{
+    int n=95;
+
+    cout << n % 10<<"последнее число"<<endl;
+    if (n/10 !=0){
+        cout <<(n/10)<<"первое число"<<endl;
+        
+    }
+}
+*
+я забыл как делать 1 сколько цифр в числе N
