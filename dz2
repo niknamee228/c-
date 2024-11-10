@@ -1,0 +1,44 @@
+dz1
+int main()
+{
+    int cheslo;
+    int symma=0;
+    cout<<"cheslo ";
+    cin>>cheslo;
+    cout<<"symma " " ";
+    for (;cheslo>0;cheslo/=10)
+    {
+        symma+=cheslo%10;
+    }
+    cout<<symma;
+
+}
+dz3
+  #include<iostream>
+using namespace std;
+int main()
+{
+for (int i = 0 ;i<10; i++)
+for (int a = 0;a<10; a++)
+if (i!=a)
+for (int p = 0; p<10;p++)
+if(i!=p && a!=p)
+std::cout<< i <<" " << a << " " << p <<::endl;
+cout<<10*9*8*3;
+}
+dz4
+  #include<iostream>
+using namespace std;
+int main()
+{
+  for (int i=2;i<1000;i++)
+  {
+    for (int m=i-1; m>1; m--)
+    {
+      if (i%m==0)
+        break;
+      if (m==2)
+        cout<<i<<"\n";        
+    }
+  }
+}
