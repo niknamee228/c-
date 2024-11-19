@@ -1,0 +1,56 @@
+#include <iostream>
+using namespace std;
+void transpose(int** matrix, int size_x, int size_, int** transposed) {
+    for (int i = 0; i < size_x; ++i) {
+        for (int j = 0; j < size_x; ++j) {
+            transposed[j][i] = matrix[i][j]; 
+        }
+    }
+}
+
+int main() {
+    int size_x, size_y;
+    std::cout << "количество строк: ";
+    std::cin >> size_x;
+    std::cout << "количество столбцов: ";
+    std::cin >> size_y;
+    int** matrix = new int*[size_x];
+    for (int i = 0; i < size_x; ++i) {
+        matrix[i] = new int[size_y];
+    }
+    std::cout << "Введите элементы :" << std::endl;
+    for (int i = 0; i < size_x; ++i) {
+        for (int j = 0; j < size_x; ++j) {
+            std::cin >> matrix[i][j];
+        }
+    }
+    int** transposed = new int*[size_x];
+    for (int i = 0; i < size_x; ++i) {
+        transposed[i] = new int[size_y];
+    }
+
+   
+    transpose(matrix, size_x, size_y, transposed);
+
+  
+    std::cout << "итог:" << std::endl;
+    for (int i = 0; i < size_x; ++i) {
+        for (int j = 0; j < size_y; ++j) {
+            std::cout << transposed[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+
+    for (int i = 0; i < size_x; ++i) {
+        delete[] matrix[i];
+    }
+    delete[] matrix;
+
+    for (int i = 0; i < size_y; ++i) {
+        delete[] transposed[i];
+    }
+    delete[] transposed;
+
+    return 0;
+}
