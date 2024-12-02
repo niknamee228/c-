@@ -1,0 +1,53 @@
+int MinOfList(Node* head) {
+    int min = 0;
+    Node* current = head;
+    while (current != nullptr) {
+        if (current->value < min) {
+            min = current->value;
+            current = current->next;
+        }
+        return min;
+    }
+  int SumOfList(Node* head) {
+    int sum = 0;
+    Node* current = head;
+    while (current != nullptr) {
+        sum += current->value;
+        current = current->next;
+    }
+    return sum;
+  }
+  void DeleteList(Node* head) {
+    Node* current = head;
+    current = current->next;
+    while (head->next != nullptr) {
+        while (current->next->next != nullptr) {
+            current = current->next;
+        }
+        delete current->next->next;
+        current->next = nullptr;
+    }
+    delete head;
+  }
+  Node* CopyList(Node* head) {
+    Node* current = head;
+    Node* cur = head;
+    cur = current;
+    return cur;
+  }
+    void SwapList(Node*& head, int index1, int index2) {
+    Node* current = head;
+    Node* current1 = head;
+    Node* Index1Node = nullptr;
+    Node* Index2Node = nullptr;
+    int ind1 = 0; int ind2 = 0;
+    while (current != nullptr) {
+        if (ind1 == index1) {
+            cout << current << endl;
+            Index1Node = current;
+            break;
+        }
+        else {
+            ind1++;
+            current = current->next;
+        }
