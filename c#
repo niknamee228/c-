@@ -4,7 +4,7 @@ class Дом
 {
     public void ВывестиКартинку()
     {
-        Console.WriteLine("     /\   ");
+        Console.WriteLine("     /\\   ");
         Console.WriteLine("    /  \\  ");
         Console.WriteLine("   /____\\ ");
         Console.WriteLine("  |      | ");
