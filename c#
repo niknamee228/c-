@@ -1,0 +1,23 @@
+using System;
+
+class Дом
+{
+    public void ВывестиКартинку()
+    {
+        Console.WriteLine("     /\   ");
+        Console.WriteLine("    /  \\  ");
+        Console.WriteLine("   /____\\ ");
+        Console.WriteLine("  |      | ");
+        Console.WriteLine("  |  []  | ");
+        Console.WriteLine("  |______| ");
+    }
+}
+
+class Программа
+{
+    static void Main(string[] args)
+    {
+        Дом мойДом = new Дом();
+        мойДом.ВывестиКартинку();
+    }
+}
