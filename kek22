@@ -1,0 +1,87 @@
+2)#include <iostream>
+#include <string>
+#include <cctype>
+
+std::string ЗаменаБуквЦифрами(const std::string &текст) {
+    std::string результат;
+
+    for (char c : текст) {
+        if (isalpha(c)) {
+            char базоваяЛитера = isupper(c) ? 'A' : 'a';
+            int порядковыйНомер = c - базоваяЛитера + 1; 
+            результат += std::to_string(порядковыйНомер) + " ";
+        }
+    }
+    
+    if (!результат.empty()) {
+        результат.pop_back();
+    }
+
+    return результат;
+}
+int main() {
+    std::string входнойТекст;
+    std::cout << "Введите текст для преобразования: ";
+    std::getline(std::cin, входнойТекст);
+
+    std::string результат = ЗаменаБуквЦифрами(входнойТекст);
+    std::cout << "Преобразованный текст: " << результат << std::endl;
+
+    return 0;
+}
+3)#include <iostream>
+#include <string>
+#include <unordered_set>
+
+std::string УдалитьДубликаты(const std::string &строка) {
+    std::unordered_set<char> встреченныеСимволы;
+    std::string результат;
+    for (char c : строка) {
+        if (встреченныеСимволы.find(c) == встреченныеСимволы.end()) {
+            результат += c; 
+            встреченныеСимволы.insert(c); 
+    }
+
+    return результат;
+}
+
+int main() {
+    std::string входнаяСтрока;
+    std::cout << "Введите строку: ";
+    std::getline(std::cin, входнаяСтрока);
+
+    std::string результат = УдалитьДубликаты(входнаяСтрока);
+    std::cout << "Строка без дубликатов: " << результат << std::endl;
+
+    return 0;
+}
+4)#include <iostream>
+#include <algorithm>
+
+bool ЯвляетсяПалиндромом(const std::string &строка) {
+    std::string очищеннаяСтрока;
+    
+ 
+    for (char c : строка) {
+        if (std::isalpha(c)) {
+            очищеннаяСтрока += std::tolower(c); 
+        }
+    }
+    std::string перевернутаяСтрока = очищеннаяСтрока;
+    std::reverse(перевернутаяСтрока.begin(), перевернутаяСтрока.end());
+
+    return очищеннаяСтрока == перевернутаяСтрока;
+}
+int main() {
+    std::string входнаяСтрока;
+    std::cout << "Введите строку: ";
+    std::getline(std::cin, входнаяСтрока);
+
+    if (ЯвляетсяПалиндромом(входнаяСтрока)) {
+        std::cout << "Строка является палиндромом." << std::endl;
+    } else {
+        std::cout << "Строка не является палиндромом." << std::endl;
+    }
+ 
+    return 0;
+}
