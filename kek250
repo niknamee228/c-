@@ -1,0 +1,120 @@
+1)#include <iostream>
+using namespace std;
+int* filterEvenNumbers(int* arr, int size, int& newSize) {
+ newSize = 0;
+ for (int i = 0;i < size;i++) {
+  if (arr[i] % 2 == 0) {
+   newSize++;
+  }
+ }
+ int* evenArr = new int[newSize];
+ int index = 0;
+
+ for (int i = 0;i < size;i++) {
+  if (arr[i] % 2 == 0) {
+   evenArr[index++] = arr[i];
+  }
+ }
+ return evenArr;
+}
+
+
+int main()
+{
+ int arr[] = { 1, 2, 3, 4, 5, 6 };
+ int size = sizeof(arr) / sizeof(arr[0]);
+ int newSize;
+
+ int* evenArr = filterEvenNumbers(arr, size, newSize);
+
+
+ for (int i = 0; i < newSize; i++) {
+  std::cout << evenArr[i] << " ";
+ }
+
+ 
+ delete[] evenArr;
+
+ return 0;
+}
+
+2)#include <iostream>
+using namespace std;
+int findMax(int* arr, int size) {
+setlocale(LC_ALL, "Russian");
+ int max = arr[0];
+ for (int i = 1;i < size;i++) {
+  if (arr[i] > max) {
+   max = arr[i];
+  }
+ }
+ return max;
+}
+int findMin(int* arr, int size) {
+ int min =arr [0];
+ for (int i = 1;i < size;i++) {
+  if (arr[i] < min) {
+   min = arr[i];
+  }
+ }
+ return min;
+} 
+int main()
+{
+ int arr[] = { 3, 5, 1,9,2,8 };
+ int size = sizeof(arr) / sizeof(arr[0]);
+ int maxElement = findMax(arr, size);
+ int minElement = findMin(arr, size);
+
+ std::cout << "Максимальный элемент: " << maxElement << std::endl;
+ std::cout << "Минимальный элемент: " << minElement << std::endl;
+
+ return 0;
+}
+
+4)#include <iostream>
+using namespace std;
+
+
+void sortArray(int* arr, int size) {
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+               
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+setlocale(LC_ALL, "Russian");
+    int size;
+    std::cout << "Введите размер массива: ";
+    std::cin >> size;
+
+  
+    int* arr = new int[size];
+
+   
+    std::cout << "Введите элементы массива: ";
+    for (int i = 0; i < size; i++) {
+        std::cin >> arr[i];
+    }
+
+ 
+    sortArray(arr, size);
+
+    std::cout << "Отсортированный массив: ";
+    for (int i = 0; i < size; i++) {
+        std::cout << arr[i] << " ";
+    }
+    std::cout << std::endl;
+
+  
+    delete[] arr;
+
+    return 0;
+}
