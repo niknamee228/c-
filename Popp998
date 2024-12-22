@@ -1,0 +1,55 @@
+
+using namespace std;
+#include <iostream>
+struct Rectangle {
+    double width;
+    double height;
+    Rectangle(double w, double h) : width(w), height(h) {}
+    void display() const {
+        std::cout << "Ширина: " << width << ", Высота: " << height << std::endl;
+    }
+    Rectangle operator+(const Rectangle& other) const {
+        return Rectangle(this->width + other.width, this->height + other.height);
+    }
+    Rectangle operator-(const Rectangle& other) const {
+        return Rectangle(this->width - other.width, this->height - other.height);
+    }
+    double operator/(const Rectangle& other) const {
+        return (other.width * other.height) / (this->width * this->height);
+    }
+    Rectangle operator*(double factor) const {
+        return Rectangle(this->width * factor, this->height * factor);
+    }
+};
+
+int main() {
+    Rectangle rect1(4.0, 5.0);
+    Rectangle rect2(2.0, 3.0);
+    setlocale(LC_ALL, "Russian");
+    
+    std::cout << "Первый прямоугольник: ";
+    rect1.display();
+    std::cout << "Второй прямоугольник: ";
+    rect2.display();
+
+    Rectangle sum = rect1 + rect2;
+    std::cout << "Сумма прямоугольников: ";
+    sum.display();
+
+    
+    Rectangle difference = rect1 - rect2;
+    std::cout << "Разность прямоугольников: ";
+    difference.display();
+
+
+    double division = rect1 / rect2;
+    std::cout << "Количество второго прямоугольника в первом: " << division << std::endl;
+
+
+    Rectangle multiplied = rect1 * 2.0;
+    std::cout << "Первый прямоугольник, умноженный на 2: ";
+    multiplied.display();
+
+    return 0;
+}
+
