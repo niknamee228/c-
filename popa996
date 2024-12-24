@@ -1,0 +1,55 @@
+4)using namespace std;
+#include <iostream>
+
+void sortArray(int* arr, int size) {
+    for (int i = 0; i < size - 1; ++i) {
+        for (int j = 0; j < size - i - 1; ++j) {
+            if (arr[j] > arr[j + 1]) {
+             
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int size = 5;
+    int* arr = new int[size]{5, 3, 4, 1, 2}; 
+
+    sortArray(arr, size);
+
+    std::cout << "Отсортированный массив: ";
+    for (int i = 0; i < size; ++i) {
+        std::cout << arr[i] << " ";
+    }
+    std::cout << std::endl;
+
+    delete[] arr; 
+    return 0;
+}
+5)#include <iostream>
+#include <cstring>
+using namespace std;
+bool isPalindrome(const char* str) {
+    int len = std::strlen(str);
+    for (int i = 0; i < len / 2; ++i) {
+        if (str[i] != str[len - i - 1]) {
+            return false; 
+        }
+    }
+    return true; 
+}
+
+int main() {
+    const char* testStr = "2 "; 
+
+    if (isPalindrome(testStr)) {
+        std::cout << testStr << " является палиндромом." << std::endl;
+    } else {
+        std::cout << testStr << " не является палиндромом." << std::endl;
+    }
+
+    return 0;
+}
