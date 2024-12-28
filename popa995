@@ -1,0 +1,116 @@
+using System;
+using System.Collections.Generic;
+
+public class Employee
+{
+    public string Name { get; set; }
+    public DateTime DateOfEmployment { get; set; }
+
+    public Employee(string name, DateTime dateOfEmployment)
+    {
+        Name = name;
+        DateOfEmployment = dateOfEmployment;
+    }
+
+    public virtual string Say()
+    {
+        return Name;
+    }
+
+    public virtual int WorkTime()
+    {
+        return 0;
+    }
+
+    public virtual string WhatYouDo()
+    {
+        return "Я сотрудник Почты России.";
+    }
+}
+
+public class Cashier : Employee
+{
+    public Cashier(string name, DateTime dateOfEmployment) : base(name, dateOfEmployment) { }
+
+    public override string WhatYouDo()
+    {
+        return "Пополняю транспортные карты";
+    }
+
+    public override int WorkTime()
+    {
+        return (DateTime.Now - DateOfEmployment).Days;
+    }
+}
+
+public class Operator : Employee
+{
+    public Operator(string name, DateTime dateOfEmployment) : base(name, dateOfEmployment) { }
+
+    public override string WhatYouDo()
+    {
+        return "Ищу посылку";
+    }
+
+    public override int WorkTime()
+    {
+        return (int)((DateTime.Now - DateOfEmployment).TotalDays / 30);
+    }
+}
+
+public class Postman : Employee
+{
+    public Postman(string name, DateTime dateOfEmployment) : base(name, dateOfEmployment) { }
+
+    public override string WhatYouDo()
+    {
+        return "Разношу почту, не мешайте";
+    }
+
+    public override int WorkTime()
+    {
+        return (DateTime.Now - DateOfEmployment).Days / 365;
+    }
+}
+
+public class PostOffice
+{
+    public List<Employee> Employees { get; set; }
+
+    public PostOffice()
+    {
+        Employees = new List<Employee>();
+    }
+
+    public void Poll()
+    {
+        foreach (var employee in Employees)
+        {
+            Console.WriteLine($"А вас как зовут? {employee.Say()}");
+            Console.WriteLine($"А что вы делаете? {employee.WhatYouDo()}");
+            Console.WriteLine($"И давно вы тут работаете? {employee.WorkTime()}");
+            Console.WriteLine();
+        }
+    }
+}
+
+class Program
+{
+    static void Main()
+    {
+        PostOffice postOffice = new PostOffice();
+
+      
+        postOffice.Employees.Add(new Cashier("Анна", new DateTime(2020, 5, 10)));
+        postOffice.Employees.Add(new Cashier("Иван", new DateTime(2019, 8, 15)));
+        postOffice.Employees.Add(new Operator("Сергей", new DateTime(2021, 1, 20)));
+        postOffice.Employees.Add(new Operator("Мария", new DateTime(2020, 3, 30)));
+        postOffice.Employees.Add(new Postman("Алексей", new DateTime(2018, 10, 5)));
+        postOffice.Employees.Add(new Postman("Ольга", new DateTime(2017, 12, 12)));
+        postOffice.Employees.Add(new Cashier("Дмитрий", new DateTime(2022, 3, 1)));
+        postOffice.Employees.Add(new Operator("Екатерина", new DateTime(2019, 7, 25)));
+
+       
+        postOffice.Poll();
+    }
+}
