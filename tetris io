@@ -147,121 +147,120 @@ int main()
     {
         while (true) {
             Sleep(200);
-            int i = 0;
+            int i = 4;
             int rotationAngle = 0;
             int size = 4;
             int rotate = 0;
-            switch 
-            case 0;
-                    if (_kbhit()) {
-                        char ch = _getch();
-                        if (ch == 'z') break;
-                        if (ch == 'a') {
-                                rotationAngle = (rotationAngle + 1) % 5;
-                        }
+            int figure = 4;
+            switch (true){
+            case 0:
+                if (_kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'z') {
+                        rotationAngle = (rotationAngle + 1) % 5;
                     }
+                }
+                RotateMatrix(figure1, rotationAngle);
+                figure(figure1, size);
+                Sleep(200);
+                system("cls");
+                i--;
+                break;
+            case 1:
 
-                    RotateMatrix(figure1, rotationAngle);
-                    figure(figure1, size);
-                    Sleep(200);
-                    system("cls");
-                    i--;
-                    break;
-                    case 1;
+                if (_kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'z') {
+                        rotationAngle = (rotationAngle + 1) % 5;
+                    }
+                }
 
-                        if (_kbhit()) {
-                            char ch = _getch();
-                            if (ch == 'z') {
-                                rotationAngle = (rotationAngle + 1) % 5;
-                            }
-                        }
+                RotateMatrix(figure2, rotationAngle);
+                figure(figure2, size);
+                Sleep(200);
+                system("cls");
+                i--;
+                break;
+            case 2:
 
-                        RotateMatrix(figure2, rotationAngle);
-                        figure(figure2, size);
-                        Sleep(200);
-                        system("cls");
-                        i--;
-                        break;
-                        case 2;
+                if (_kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'z') {
+                        rotationAngle = (rotationAngle + 1) % 5;
+                    }
+                }
 
-                            if (_kbhit()) {
-                                char ch = _getch();
-                                if (ch == 'z') {
-                                    rotationAngle = (rotationAngle + 1) % 5;
-                                }
-                            }
+                RotateMatrix(figure3, rotationAngle);
+                figure(figure3, size);
+                Sleep(200);
+                system("cls");
+                i--;
+                break;
+            case 3:
 
-                            RotateMatrix(figure3, rotationAngle);
-                            figure(figure3, size);
-                            Sleep(200);
-                            system("cls");
-                            i--;
-                            break;
-                            case 3;
+                if (_kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'z') {
+                        rotationAngle = (rotationAngle + 1) % 5;
+                    }
+                }
 
-                                if (_kbhit()) {
-                                    char ch = _getch();
-                                    if (ch == 'z') {
-                                        rotationAngle = (rotationAngle + 1) % 5;
-                                    }
-                                }
+                RotateMatrix(figure4, rotationAngle);
+                figure(figure4, size);
+                Sleep(200);
+                system("cls");
+                i--;
+                break;
+            case 4:
 
-                                RotateMatrix(figure4, rotationAngle);
-                                figure(figure4, size);
-                                Sleep(200);
-                                system("cls");
-                                i--;
-                                break;
-                                case 4;
+                if (_kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'z') {
+                        rotationAngle = (rotationAngle + 1) % 5;
+                    }
+                }
 
-                                    if (_kbhit()) {
-                                        char ch = _getch();
-                                        if (ch == 'z') {
-                                            rotationAngle = (rotationAngle + 1) % 5;
-                                        }
-                                    }
+                RotateMatrix(figure5, rotationAngle);
+                figure(figure5, size);
+                Sleep(200);
+                system("cls");
+                i--;
+                break;
+            case 5:
 
-                                    RotateMatrix(figure5, rotationAngle);
-                                    figure(figure5, size);
-                                    Sleep(200);
-                                    system("cls");
-                                    i--;
-                                    break;
-                                    case 5;
+                if (_kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'z') {
+                        rotationAngle = (rotationAngle + 1) % 5;
+                    }
+                }
 
-                                        if (_kbhit()) {
-                                            char ch = _getch();
-                                            if (ch == 'z') {
-                                                rotationAngle = (rotationAngle + 1) % 5;
-                                            }
-                                        }
+                RotateMatrix(figure6, rotationAngle);
+                figure(figure6, size);
+                Sleep(200);
+                system("cls");
+                i--;
+                break;
+            case 6:
 
-                                        RotateMatrix(figure6, rotationAngle);
-                                        figure(figure6, size);
-                                        Sleep(200);
-                                        system("cls");
-                                        i--;
-                                        break;
-                                        case 6;
+                if (_kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'z') {
+                        rotationAngle = (rotationAngle + 1) % 5;
+                    }
+                }
 
-                                            if (_kbhit()) {
-                                                char ch = _getch();
-                                                if (ch == 'z') {
-                                                    rotationAngle = (rotationAngle + 1) % 5;
-                                                }
-                                            }
-
-                                            RotateMatrix(figure7, rotationAngle);
-                                            figure(figure7, size);
-                                            Sleep(200);
-                                            system("cls");
-                                            i--;
-                                            break;
+                RotateMatrix(figure7, rotationAngle);
+                figure(figure7, size);
+                Sleep(200);
+                system("cls");
+                i--;
+                break;
 
             }
         }
     }
-
+}
     
 
 
