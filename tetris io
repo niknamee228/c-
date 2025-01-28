@@ -152,6 +152,8 @@ int main()
             int size = 4;
             int rotate = 0;
             int figure = 4;
+            int pointer = 0;
+            int to = 0;
             switch (true){
             case 0:
                 if (_kbhit()) {
@@ -161,7 +163,7 @@ int main()
                     }
                 }
                 RotateMatrix(figure1, rotationAngle);
-                figure(figure1, size);
+                figure;pointer;to* (figure1, rotationAngle);
                 Sleep(200);
                 system("cls");
                 i--;
@@ -176,7 +178,7 @@ int main()
                 }
 
                 RotateMatrix(figure2, rotationAngle);
-                figure(figure2, size);
+                figure;pointer;to* (figure2, rotationAngle);
                 Sleep(200);
                 system("cls");
                 i--;
@@ -191,7 +193,7 @@ int main()
                 }
 
                 RotateMatrix(figure3, rotationAngle);
-                figure(figure3, size);
+                figure;pointer;to* (figure3, rotationAngle);
                 Sleep(200);
                 system("cls");
                 i--;
@@ -206,7 +208,7 @@ int main()
                 }
 
                 RotateMatrix(figure4, rotationAngle);
-                figure(figure4, size);
+                figure;pointer;to* (figure4, rotationAngle);
                 Sleep(200);
                 system("cls");
                 i--;
@@ -221,7 +223,7 @@ int main()
                 }
 
                 RotateMatrix(figure5, rotationAngle);
-                figure(figure5, size);
+                figure;pointer;to* (figure5, rotationAngle);
                 Sleep(200);
                 system("cls");
                 i--;
@@ -236,7 +238,7 @@ int main()
                 }
 
                 RotateMatrix(figure6, rotationAngle);
-                figure(figure6, size);
+                figure;pointer;to* (figure6, rotationAngle);
                 Sleep(200);
                 system("cls");
                 i--;
@@ -251,7 +253,7 @@ int main()
                 }
 
                 RotateMatrix(figure7, rotationAngle);
-                figure(figure7, size);
+                figure;pointer;to* (figure7, rotationAngle);
                 Sleep(200);
                 system("cls");
                 i--;
@@ -261,7 +263,7 @@ int main()
         }
     }
 }
-    
+   
 
 
 
