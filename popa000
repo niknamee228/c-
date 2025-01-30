@@ -1,0 +1,36 @@
+using namespace std;
+#include <iostream>
+
+int calculateMatrixSum(int** matrix, int rows, int cols) {
+	int sum = 0;
+	for (int i = 0;i < rows;i++) {
+		for (int j = 0;j < cols;j++) {
+			sum += matrix[i][j];
+		}
+
+	}
+		return sum;
+}
+int main() {
+	setlocale(LC_ALL, "RU");
+	int rows, cols;
+	
+	cout << "ведите количество строк:";
+	cin >> rows;
+	cout << "введите количеств столбиков:" ;
+	cin >> cols;
+
+	int** matrix = new int* [rows];
+	for (int i = 0;i < rows;++i) {
+		matrix[i] = new int[cols];
+	}
+	cout << "Сумма элементов матрицы: " ;
+	for (int i = 0;i < rows;i++) {
+		for (int j = 0;j < cols;j++) {
+			cin >> matrix[i][j];
+		}
+	}
+	int sum = calculateMatrixSum(matrix, rows, cols);
+	cout << "сумма элемента:" << sum << endl;
+	return 0;
+}
