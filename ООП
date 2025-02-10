@@ -1,0 +1,193 @@
+#include <iostream>
+using namespace std;
+
+class Footwear {
+private:
+	int Size;
+	int Color;
+	string Firma;
+	string Brend;
+
+public:
+	int GetSize() {
+		return Size;
+	}
+
+	int GetColor() {
+		return Color;
+	}
+
+	string GetFirma() {
+		return Firma;
+	}
+
+	string GetBrend() {
+		return Brend;
+	}
+
+	void SetSize(int Size) {
+		this->Size = Size;
+	}
+
+	void SetColor(int Color) {
+		this->Color = Color;
+	}
+
+	void SetFirma(string Firma) {
+		this->Firma = Firma;
+	}
+
+	void SetBrend(string Brend) {
+		this->Brend = Brend;
+	}
+
+	void PrintAll() {
+		cout << "Размеры: " << Size << endl;
+		cout << "Цвет: " << Color << endl;
+		cout << "Фирма: " << Firma << endl;
+		cout << "Бренд: " << Brend << endl;
+	}
+
+	Footwear(int Size, int Color, string Firma, string Brend) {
+		this->Size = Size;
+		this->Color = Color;
+		this->Firma = Firma;
+		this->Brend = Brend;
+	}
+	Footwear() :
+		Size(5),
+		Color(5),
+		Firma(" "),
+		Brend(" ") {}
+};
+
+class Noski {
+private:
+	int Size1;
+	string Firma1;
+
+public:
+	int GetSize1() {
+		return Size1;
+	}
+
+	string GetFirma1() {
+		return Firma1;
+	}
+
+	void SetSize1(int Size1) {
+		this->Size1 = Size1;
+	}
+
+	void SetFirma1(string Firma1) {
+		this->Firma1 = Firma1;
+	}
+
+	void PrintAll() {
+		cout << "Размеры: " << Size1 << endl;
+		cout << "Фирма: " << Firma1 << endl;
+	}
+
+	Noski(int Size1, string Firma1) {
+		this->Size1 = Size1;
+		this->Firma1 = Firma1;
+	}
+
+	Noski() :
+	Size1(5), 
+	Firma1(" ") {}
+};
+class  Trusi{
+private:
+	int Size3;
+	string Firma3;
+
+public:
+	int GetSize3() {
+		return Size3;
+	}
+	string GetFirma3() {
+		return Firma3;
+	}
+	void SetSize3(int Size3) {
+		this->Size3 = Size3;
+	}
+	void SetFirma3(string Firma3) {
+		this->Firma3 = Firma3;
+	}
+	void PrintAll() {
+		cout << "Размеры:" << Size3 << endl;
+		cout << "Фирма:" << Firma3 << endl;
+	}
+		Trusi(int Size3, string Firma3) {
+			this->Size3 = Size3;
+			this->Firma3 = Firma3;
+		}		
+		Trusi():
+		Size3(52),
+		Firma3(" "){}
+	};
+
+class Shop {
+private:
+	int Size;
+	int Size1;
+	int Size3;
+	Trusi* Truss;
+	Noski* Socks;
+	Footwear* Footwears;
+
+public:
+	Shop(int size, int size1, int Size3) : Size(size), Size1(size1), Size3(Size3) {
+		Truss = new Trusi[Size3];
+		Socks = new Noski[Size1];
+		Footwears = new Footwear[Size];
+	}
+	int GetSize3() {
+		return Size3;
+	}
+	
+	int SetSize3(int Size3) {
+		this->Size3 = Size3;
+	}
+	
+	int GetSize() {
+		return Size;
+	}
+
+	void SetSize(int Size) {
+		this->Size = Size;
+	}
+
+	int GetSize1() {
+		return Size1;
+	}
+
+	void SetSize1(int Size1) {
+		this->Size1 = Size1;
+	}
+
+
+};
+
+int main() {
+	setlocale(LC_ALL, "rus");
+	Footwear kolo;
+	Noski qwe;
+	Trusi zxc;
+	kolo.SetSize(40);
+	kolo.SetColor(1);
+	kolo.SetFirma("Moncler");
+	kolo.SetBrend("newrocki");
+	kolo.PrintAll();
+
+	qwe.SetSize1(25);
+	qwe.SetFirma1("Rick Owens");
+	qwe.PrintAll();
+
+	zxc.SetSize3(52);
+	zxc.SetFirma3("ADIDAS");
+	zxc.PrintAll();
+
+	return 0;
+}
