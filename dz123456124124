@@ -1,0 +1,112 @@
+#include <iostream>
+
+class Rasstoyanie {
+private:
+    int kilometers;
+    int meters;
+
+   
+    void normalize() {
+        kilometers += meters / 1000;
+        meters %= 1000;
+        if (meters < 0) {
+            kilometers--;
+            meters += 1000;
+        }
+    }
+
+public:
+    Rasstoyanie() : kilometers(0), meters(0) {}
+    Rasstoyanie(int km, int m) : kilometers(km), meters(m) {
+        normalize();
+    }
+    int getKilometers() const { return kilometers; }
+    int getMeters() const { return meters; }
+
+    void setKilometers(int km) { kilometers = km; }
+    void setMeters(int m) {
+        meters = m;
+        normalize();
+    }
+    Rasstoyanie operator+(const Rasstoyanie& other) const {
+        return Rasstoyanie(kilometers + other.kilometers, meters + other.meters);
+    }
+    
+    Rasstoyanie operator-(const Rasstoyanie& other) const {
+        return Rasstoyanie(kilometers - other.kilometers, meters - other.meters);
+    }
+
+    Rasstoyanie operator*(double scalar) const {
+        double totalMeters = (kilometers * 1000.0) + meters;
+        double resultMeters = totalMeters * scalar;
+        int resultKm = static_cast<int>(resultMeters / 1000);
+        int resultM = static_cast<int>(resultMeters) % 1000;
+        return Rasstoyanie(resultKm, resultM);
+    }
+
+    Rasstoyanie operator/(double scalar) const {
+        if (scalar == 0) {
+            std::cerr << "Ошибка: деление на ноль!" << std::endl;
+            return *this; 
+        }
+        double totalMeters = (kilometers * 1000.0) + meters;
+        double resultMeters = totalMeters / scalar;
+        int resultKm = static_cast<int>(resultMeters / 1000);
+        int resultM = static_cast<int>(resultMeters) % 1000;
+        return Rasstoyanie(resultKm, resultM);
+    }
+
+  
+    bool operator==(const Rasstoyanie& other) const {
+        return (kilometers == other.kilometers && meters == other.meters);
+    }
+
+    bool operator!=(const Rasstoyanie& other) const {
+        return !(*this == other);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Rasstoyanie& obj) {
+        os << obj.kilometers << " км " << obj.meters << " м";
+        return os;
+    }
+
+    friend std::istream& operator>>(std::istream& is, Rasstoyanie& obj) {
+        std::cout << "Введите километры: ";
+        is >> obj.kilometers;
+        std::cout << "Введите метры: ";
+        is >> obj.meters;
+        obj.normalize();
+        return is;
+    }
+};
+
+int main() {
+    Rasstoyanie d1(1, 500);
+    Rasstoyanie d2(2, 700);
+
+    std::cout << "d1: " << d1 << std::endl;
+    std::cout << "d2: " << d2 << std::endl;
+
+    Rasstoyanie sum = d1 + d2;
+    std::cout << "d1 + d2: " << sum << std::endl;
+
+    Rasstoyanie diff = d2 - d1;
+    std::cout << "d2 - d1: " << diff << std::endl;
+
+    Rasstoyanie mult = d1 * 2.5;
+    std::cout << "d1 * 2.5: " << mult << std::endl;
+
+    Rasstoyanie div = d2 / 2;
+    std::cout << "d2 / 2: " << div << std::endl;
+
+    std::cout << "d1 == d2: " << (d1 == d2) << std::endl;
+    std::cout << "d1 != d2: " << (d1 != d2) << std::endl;
+
+    Rasstoyanie d3;
+    std::cout << "Введите расстояние для d3:" << std::endl;
+    std::cin >> d3;
+    std::cout << "d3: " << d3 << std::endl;
+
+    return 0;
+}
+(мне помогали,я не очень понял как это сделать)
