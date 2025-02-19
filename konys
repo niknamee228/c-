@@ -1,0 +1,145 @@
+#include <iostream>
+#include<string>
+using namespace std;
+
+class Conys {
+private:
+	int x;
+	int y;
+	int raduys;
+	int h;
+	int l;
+
+public:
+	int getX() {
+		return x;
+	}
+	int getY() {
+		return y;
+	}
+	int getraduys() {
+		return raduys;
+	}
+	int geth() {
+		return h;
+	}
+	int getl() {
+		return l;
+	}
+	void setX(int x) {
+		this->x = x;
+	}
+	void setY(int y) {
+		this->y = y;
+	}
+	void setraduys(int raduys) {
+		this->raduys = raduys;
+	}
+	void seth(int h) {
+		this->h = h;
+	}
+	void setl(int l) {
+		this->l = l;
+	}
+	Conys() {
+		this->x = 0;
+		this->y = 0;
+		this->raduys = 0;
+		this->h = 0;
+		this->l = 0;
+
+	}
+	Conys(int x, int y, int raduys, int h, int l) {
+		this->x = x;
+		this->y = y;
+		this->raduys = raduys;
+		this->h = h;
+		this->l = l;
+	}
+	double naxodim() {
+		const double pi = 3.14;
+		double m = pi * this->raduys * this->l;
+		return m;
+	}
+	double naxodimm() {
+		const double pi = 3.14;
+		double m = (pi * this->raduys * this->raduys * this->h)/3;
+		return m;
+	}
+	friend ostream& operator <<(ostream& ostream, Conys& qwe) {
+		ostream << "x" << qwe.x << "y" << qwe.y << "raduys" << qwe.raduys << "h" << qwe.h << "l" << qwe.l;
+		return ostream;
+	}
+	friend istream& operator>>(istream& istream, Conys& qwe) {
+		istream >> qwe.x >> qwe.y >> qwe.raduys >> qwe.h >> qwe.l;
+		return istream;
+
+	}
+};
+
+class usCon :Conys{
+private:
+	int raduys2;
+
+public:
+	int getraduys2() {
+		return raduys2;
+	}
+	void setraduys2(int raduys2) {
+		this->raduys2 = raduys2;
+	}
+	usCon(int x, int y, int raduys, int h, int l, int raduys2) :Conys(x, y, raduys, h, l) {
+		this->raduys2 = raduys2;
+	}
+
+	usCon() :Conys() {
+		this->raduys2 = 0;
+	}
+	virtual double naxodim() {
+		const double pi = 3.14;
+		double s = pi * this->getl() * (this->getraduys() + this->raduys2);
+		return s;
+	}
+	virtual double naxodimm() {
+		const double pi = 3.14;
+		double v = (pi / 3) * this->geth() * (this->getraduys() * this->getraduys() + this->getraduys() * this->raduys2 + this->raduys2 * this->raduys2);
+		return v;
+	}
+	friend ostream& operator<<(ostream& ostream, usCon& ewq) {
+		ostream << "x - " << ewq.getX() << "y - " << ewq.getY() << "raduys - " << ewq.getraduys() << "h  - " << ewq.geth() << ewq.getl() << "raduys2 - " << ewq.getraduys2();
+		return ostream;
+	}
+	bool operator==(Conys& ewq) {
+		if (naxodim() == ewq.naxodim())
+			return true;
+		return false;
+	}
+	bool operator>(Conys& ewq) {
+		if (naxodim() > ewq.naxodim())
+			return true;
+		return false;
+	}
+	bool operator<(Conys& ewq) {
+		if (naxodim() < ewq.naxodim())
+			return true;
+		return false;
+	}
+};
+
+
+
+
+int main() {
+	
+
+		Conys qwe(15, 12, 13, 14, 16);
+		cout << qwe.naxodim() << " "; 
+		cout << qwe.naxodimm() << endl; 
+
+		
+		usCon ewq(10, 9, 2, 1, 3, 4); 
+		cout << ewq.naxodim() << " "; 
+		cout << ewq.naxodimm() << endl; 
+
+	
+}
