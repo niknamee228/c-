@@ -1,0 +1,62 @@
+
+#include <iostream>
+using namespace std;
+
+class car {
+public:
+	string name;
+	string wheels;
+	string dviratel;
+	string massa;
+	string h;
+	void print() const
+	{
+		cout << "Name:" << name << "Wheels:" << wheels << "Dviratel:" << dviratel << "Massa" << massa <<"h:"<<h<< endl;
+	}
+	
+};
+class wheels : car
+{
+public:
+	string razmeri;
+};
+
+class dviratel : car
+{
+public:
+	string sil;
+};
+
+class Massa :car {
+public:
+	string massa;
+};
+class h :car {
+	string visota;
+};
+int main() {
+	car qwe;
+	qwe.name = "byrati\n";
+	qwe.wheels = "12\n";
+	qwe.dviratel = "15v.tyrbo\n";
+	qwe.massa = "250 ton\n";
+	qwe.h = "6000.mm'\n";
+	qwe.print();
+	
+	car ewq;
+	ewq.name = "betmobil\n";
+	ewq.wheels = "52\n";
+	ewq.dviratel = "228v.tyrbo\n";
+	ewq.massa = "1488.ton\n";
+	ewq.h = "5000.mm\n";
+	ewq.print();
+
+(так надо было ?)
+
+
+
+
+
+
+
+}
