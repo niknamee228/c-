@@ -1,0 +1,111 @@
+#include <iostream>
+#include<string>
+using namespace std;
+
+class Employee {
+private:
+    string name;
+    int salary;
+public:
+    string getName() {
+        return name;
+    }
+    int getSalary() {
+        return salary;
+    }
+    void setName(string name) {
+        this->name = name;
+    }
+    void setSalary(int salary) {
+        this->salary = salary;
+    }
+    Employee(string name, int salary) {
+        this->name = name;
+        this->salary = salary;
+    }
+    Employee() {
+        this->name = " ";
+        this->salary = 0;
+    }
+    virtual int calculateBonus() {
+        int bonus = 10;
+        return bonus;
+    }
+};
+
+class Manager :Employee {
+private:
+    int numberOfSubordinates;
+public:
+    int getNumberOfSubordinates() {
+        return numberOfSubordinates;
+    }
+    void setNumberOfSubordinates(int setNumberOfSubordinates) {
+        this->numberOfSubordinates = numberOfSubordinates;
+    }
+    Manager(string name, int salary, int numberOfSubordinates) :Employee(name, salary) {
+        this->numberOfSubordinates = numberOfSubordinates;
+    }
+    int calculateBonus() {
+        int bonus = 10;
+        if (numberOfSubordinates >= 10 && getSalary() >= 1000)
+            return bonus;
+        else
+            return bonus - 5;
+    }
+};
+class Developer :Employee {
+private:
+    int numberOfProjects;
+public:
+    int getNumberOfProjects() {
+        return numberOfProjects;
+    }
+    void setNumberOfProjects(int numberOfProjects) {
+        this->numberOfProjects = numberOfProjects;
+    }
+    Developer(string name, int salary, int numberOfProjects) :Employee(name, salary) {
+        this->numberOfProjects = numberOfProjects;
+    }
+    int calculateBonus() {
+        int bonus = 10;
+        if (getSalary() > 1000 && numberOfProjects > 2)
+            return bonus;
+
+        else
+            return bonus - 7;
+    }
+};
+class Intern :Employee {
+private:
+    int internshipDuration;
+public:
+    int getInternshipDuration() {
+        return internshipDuration;
+    }
+    void setInternshipDuration(int internshipDuration) {
+        this->internshipDuration = internshipDuration;
+    }
+    Intern(string name, int salary, int internshipDuration) :Employee(name, salary) {
+        this->internshipDuration = internshipDuration;
+
+    }
+    int calculateBonus() {
+        int bonus = 15;
+        if (internshipDuration > 3)
+            return bonus;
+        return 0;
+    }
+};
+
+int main()
+{
+    setlocale(LC_ALL, "rus");
+    Employee g = Employee();
+    Manager manager = Manager("dimasik", 10000, 8);
+    Developer developer = Developer("nikitosik", 200000, 3);
+    Intern intern = Intern("gl", 552, 7);
+    cout << "бонус = " << manager.calculateBonus() << endl;
+    cout << "бонус = " << developer.calculateBonus() << endl;
+    cout << "бонус = " << intern.calculateBonus() << endl;
+}
