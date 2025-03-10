@@ -1,0 +1,166 @@
+#include <iostream>
+#include <stdexcept>
+
+using namespace std;
+
+
+template <typename T>
+class LinkedList {
+public:
+
+    class Node {
+    public:
+        T data;
+        Node* next;
+
+        Node() : data(), next(nullptr) {}  
+        explicit Node(const T& value) : data(value), next(nullptr) {}
+    };
+
+    Node* Head;
+
+    LinkedList() : Head(nullptr) {}
+    explicit LinkedList(Node* head) : Head(head) {}
+
+
+    ~LinkedList() {
+        clear();
+    }
+
+
+    void clear() {
+        Node* current = Head;
+        while (current != nullptr) {
+            Node* temp = current;
+            current = current->next;
+            delete temp;
+        }
+        Head = nullptr;
+    }
+
+  
+    void push(const T& value) {
+        if (Head == nullptr) {
+            Head = new Node(value);
+        } else {
+            Node* current = Head;
+            while (current->next != nullptr) {
+                current = current->next;
+            }
+            current->next = new Node(value);
+        }
+    }
+
+
+    void print() const {
+        if (Head == nullptr) {
+            cout << "Список пустой\n";
+        } else {
+            Node* current = Head;
+            while (current != nullptr) {
+                cout << current->data << " ";
+                current = current->next;
+            }
+            cout << "\n";
+        }
+    }
+
+    T get(int index) const {
+        if (Head == nullptr || index < 0) {
+            throw out_of_range("Индекс вне допустимого диапазона");
+        }
+        Node* current = Head;
+        for (int i = 0; i < index && current != nullptr; ++i) {
+            current = current->next;
+        }
+        if (current == nullptr) {
+            throw out_of_range("Индекс вне допустимого диапазона");
+        }
+        return current->data;
+    }
+
+    void remove(const T& data) {
+        if (Head == nullptr) {
+            return;
+        }
+        Node* current = Head;
+        Node* prev = nullptr;
+        while (current != nullptr && current->data != data) {
+            prev = current;
+            current = current->next;
+        }
+        if (current == nullptr) {
+            return;
+        }
+        if (prev == nullptr) {
+            Head = current->next;
+        } else {
+            prev->next = current->next;
+        }
+        delete current;
+    }
+
+
+    void removeAt(int index) {
+        if (Head == nullptr || index < 0) {
+            throw out_of_range("Индекс вне допустимого диапазона");
+        }
+        Node* current = Head;
+        Node* prev = nullptr;
+        for (int i = 0; i < index && current != nullptr; ++i) {
+            prev = current;
+            current = current->next;
+        }
+        if (current == nullptr) {
+            throw out_of_range("Индекс вне допустимого диапазона");
+        }
+        if (prev == nullptr) {
+            Head = current->next;
+        } else {
+            prev->next = current->next;
+        }
+        delete current;
+    }
+
+
+    LinkedList<T> subList(int indexStart, int indexEnd) const {
+        if (Head == nullptr || indexStart < 0 || indexEnd < 0 || indexStart > indexEnd) {
+            throw invalid_argument("Некорректные индексы для подсписка");
+        }
+        Node* current = Head;
+        for (int i = 0; i < indexStart && current != nullptr; ++i) {
+            current = current->next;
+        }
+        if (current == nullptr) {
+            throw out_of_range("Индекс вне допустимого диапазона");
+        }
+        LinkedList<T> result;
+        for (int i = indexStart; i <= indexEnd && current != nullptr; ++i) {
+            result.push(current->data);
+            current = current->next;
+        }
+        return result;
+    }
+};
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    LinkedList<string>* list = new LinkedList<string>();
+    list->push("10.5asdd");
+    list->push("15.5asdasd");
+    list->push("20.5adsad");
+    list->push("25.5asdasd");
+    list->push("30.5asdasd");
+    
+    list->print(); 
+
+    try {
+  
+        LinkedList<string> sublist = list->subList(1, 3);
+        sublist.print(); 
+    } catch (const exception& e) {
+        cerr << "Ошибка: " << e.what() << '\n';
+    }
+
+    delete list;
+}
