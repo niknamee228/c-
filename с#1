@@ -1,0 +1,186 @@
+using System;
+
+abstract class BaseHandler
+{
+    protected BaseHandler nextHandler;
+
+    public void SetNext(BaseHandler handler)
+    {
+        nextHandler = handler;
+    }
+
+    public abstract void HandleRequest(Player player);
+}
+
+class Question1Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой ваш любимый элемент?");
+        Console.WriteLine("1. Огонь");
+        Console.WriteLine("2. Вода");
+        Console.WriteLine("3. Земля");
+        Console.WriteLine("4. Воздух");
+
+        string choice = Console.ReadLine();
+        if (choice == "1") player.Element = "Огонь";
+        else if (choice == "2") player.Element = "Вода";
+        else if (choice == "3") player.Element = "Земля";
+        else if (choice == "4") player.Element = "Воздух";
+
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question2Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой ваш стиль боя?");
+        Console.WriteLine("1. Ближний бой");
+        Console.WriteLine("2. Дальний бой");
+        Console.WriteLine("3. Магия");
+
+        string choice = Console.ReadLine();
+        if (choice == "1") player.FightingStyle = "Ближний бой";
+        else if (choice == "2") player.FightingStyle = "Дальний бой";
+        else if (choice == "3") player.FightingStyle = "Магия";
+
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question3Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой ваш любимый класс персонажа?");
+        Console.WriteLine("1. Воин");
+        Console.WriteLine("2. Маг");
+        Console.WriteLine("3. Разбойник");
+
+        string choice = Console.ReadLine();
+        if (choice == "1") player.Class = "Воин";
+        else if (choice == "2") player.Class = "Маг";
+        else if (choice == "3") player.Class = "Разбойник";
+
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question4Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой ваш любимый герой в фэнтези?");
+        player.FavoriteHero = Console.ReadLine();
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question5Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой ваш идеальный компаньон?");
+        player.IdealCompanion = Console.ReadLine();
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question6Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой у вас любимый цвет?");
+        player.FavoriteColor = Console.ReadLine();
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question7Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой ваш любимый вид оружия?");
+        player.FavoriteWeapon = Console.ReadLine();
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question8Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Какой ваш подход к решению конфликтов?");
+        player.ConflictResolution = Console.ReadLine();
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Question9Handler : BaseHandler
+{
+    public override void HandleRequest(Player player)
+    {
+        Console.WriteLine("Что вы цените больше всего в приключениях?");
+        player.ValueInAdventure = Console.ReadLine();
+        nextHandler?.HandleRequest(player);
+    }
+}
+
+class Player
+{
+    public string Element { get; set; }
+    public string FightingStyle { get; set; }
+    public string Class { get; set; }
+    public string FavoriteHero { get; set; }
+    public string IdealCompanion { get; set; }
+    public string FavoriteColor { get; set; }
+    public string FavoriteWeapon { get; set; }
+    public string ConflictResolution { get; set; }
+    public string ValueInAdventure { get; set; }
+}
+
+class Game
+{
+    static void Main(string[] args)
+    {
+        Player player = new Player();
+
+      
+        BaseHandler question1 = new Question1Handler();
+        BaseHandler question2 = new Question2Handler();
+        BaseHandler question3 = new Question3Handler();
+        BaseHandler question4 = new Question4Handler();
+        BaseHandler question5 = new Question5Handler();
+        BaseHandler question6 = new Question6Handler();
+        BaseHandler question7 = new Question7Handler();
+        BaseHandler question8 = new Question8Handler();
+        BaseHandler question9 = new Question9Handler();
+
+        question1.SetNext(question2);
+        question2.SetNext(question3);
+        question3.SetNext(question4);
+        question4.SetNext(question5);
+        question5.SetNext(question6);
+        question6.SetNext(question7);
+        question7.SetNext(question8);
+        question8.SetNext(question9);
+
+   
+        question1.HandleRequest(player);
+
+        Console.WriteLine("\nРезультаты:");
+        Console.WriteLine($"Элемент: {player.Element}");
+        Console.WriteLine($"Стиль боя: {player.FightingStyle}");
+        Console.WriteLine($"Класс: {player.Class}");
+        Console.WriteLine($"Любимый герой: {player.FavoriteHero}");
+        Console.WriteLine($"Идеальный компаньон: {player.IdealCompanion}");
+        Console.WriteLine($"Любимый цвет: {player.FavoriteColor}");
+        Console.WriteLine($"Любимое оружие: {player.FavoriteWeapon}");
+        Console.WriteLine($"Подход к конфликту: {player.ConflictResolution}");
+        Console.WriteLine($"Ценность в приключении: {player.ValueInAdventure}");
+
+        Console.ReadKey(); 
+    }
+}
