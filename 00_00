@@ -1,0 +1,71 @@
+using System;
+using System.Data.SQLite;
+using System.Threading;
+using Telegram.Bot;
+using Telegram.Bot.Args;
+
+class Program
+{
+    private static TelegramBotClient Bot;
+
+    static void Main(string[] args)
+    {
+        Bot = new TelegramBotClient("7712053330:AAEiiuOK3kyIoGInE3_-QyO7sXnhESld6_0");
+        Bot.OnMessage += BotOnMessageReceived;
+        Bot.StartReceiving();
+        Console.WriteLine("Bot is running...");
+        Thread.Sleep(Timeout.Infinite);
+    }
+
+    private static void BotOnMessageReceived(object sender, MessageEventArgs e)
+    {
+        if (e.Message.Type == Telegram.Bot.Types.Enums.MessageType.Text)
+        {
+            var message = e.Message.Text;
+            Console.WriteLine($"Received message: {message}");
+
+            string response = SearchProduct(message);
+            Bot.SendTextMessageAsync(e.Message.Chat.Id, response);
+        }
+    }
+
+    private static string SearchProduct(string searchTerm)
+    {
+        string connectionString = "Data Source=products.db;";
+        string result = "Товары не найдены.";
+
+        using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+        {
+            conn.Open();
+
+            string query = "SELECT Name, Price FROM Products WHERE Name LIKE @SearchTerm";
+            using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@SearchTerm", "%" + searchTerm + "%");
+                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        result = "Найденные товары:\n";
+                        while (reader.Read())
+                        {
+                            string name = reader.GetString(0);
+                            decimal price = reader.GetDecimal(1);
+                            result += $"{name} - {price} руб.\n";
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+}
+CREATE TABLE Products(
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT NOT NULL,
+    Price REAL NOT NULL
+);
+
+INSERT INTO Products(Name, Price) VALUES('Молоко', 50.0);
+INSERT INTO Products(Name, Price) VALUES('Сыр', 150.0);
+INSERT INTO Products(Name, Price) VALUES('Йогурт', 80.0);
