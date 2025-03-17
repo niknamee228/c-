@@ -1,0 +1,239 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+const int MAX_ELEMENTS = 100;
+
+class Entity {
+protected:
+    int numericField;
+    string stringField;
+
+public:
+    Entity() : numericField(0), stringField("Unknown") {}
+
+    Entity(int number, const string& text) {
+        setNumericField(number);
+        setStringField(text);
+    }
+
+    virtual ~Entity() {}
+
+    void setNumericField(int number) {
+        if (number < 0 || number > 1000) {
+            cout << "Error: Number must be between 0 and 1000." << endl;
+            return;
+        }
+        numericField = number;
+    }
+
+    void setStringField(const string& text) {
+        stringField = text;
+    }
+
+    virtual void display() const {
+        cout << "Numeric Field: " << numericField << ", String Field: " << stringField << endl;
+    }
+
+    bool operator==(const Entity& other) const {
+        return (numericField == other.numericField) && (stringField == other.stringField);
+    }
+
+    Entity operator+(const Entity& other) const {
+        Entity result;
+        result.numericField = numericField + other.numericField;
+        result.stringField = stringField + " & " + other.stringField;
+        return result;
+    }
+
+    Entity& operator++() {
+        ++numericField;
+        return *this;
+    }
+};
+
+class Organization : public Entity {
+public:
+    Organization() : Entity() {}
+    Organization(int number, const string& text) : Entity(number, text) {}
+
+    void display() const override {
+        cout << "Organization - ";
+        Entity::display();
+    }
+};
+
+class Factory : public Entity {
+public:
+    Factory() : Entity() {}
+    Factory(int number, const string& text) : Entity(number, text) {}
+
+    void display() const override {
+        cout << "Factory - ";
+        Entity::display();
+    }
+};
+
+class InsuranceCompany : public Entity {
+public:
+    InsuranceCompany() : Entity() {}
+    InsuranceCompany(int number, const string& text) : Entity(number, text) {}
+
+    void display() const override {
+        cout << "Insurance Company - ";
+        Entity::display();
+    }
+};
+
+class Plant : public Entity {
+public:
+    Plant() : Entity() {}
+    Plant(int number, const string& text) : Entity(number, text) {}
+
+    void display() const override {
+        cout << "Plant - ";
+        Entity::display();
+    }
+};
+
+class Application {
+private:
+    Entity* collection[MAX_ELEMENTS];
+    int count;
+
+public:
+    Application() : count(0) {}
+
+    ~Application() {
+        for (int i = 0; i < count; i++) {
+            delete collection[i];
+        }
+    }
+
+    void addEntity(Entity* entity) {
+        if (count < MAX_ELEMENTS) {
+            collection[count++] = entity;
+            cout << "Entity added successfully." << endl;
+        }
+        else {
+            cout << "Collection is full." << endl;
+        }
+    }
+
+    void removeEntity(int index) {
+        if (index < 0 || index >= count) {
+            cout << "Invalid index." << endl;
+            return;
+        }
+        delete collection[index];
+        for (int i = index; i < count - 1; i++) {
+            collection[i] = collection[i + 1];
+        }
+        count--;
+        cout << "Entity removed successfully." << endl;
+    }
+
+    void displayEntities() {
+        for (int i = 0; i < count; i++) {
+            cout << i << ": ";
+            collection[i]->display();
+        }
+    }
+
+    void compareEntities(int index1, int index2) {
+        if (index1 < 0 || index1 >= count || index2 < 0 || index2 >= count) {
+            cout << "Invalid indices." << endl;
+            return;
+        }
+        if (*collection[index1] == *collection[index2]) {
+            cout << "Entities are equal." << endl;
+        }
+        else {
+            cout << "Entities are not equal." << endl;
+        }
+    }
+
+    void run() {
+        while (true) {
+            cout << "Menu:\n"
+                << "1. Add new element\n"
+                << "2. Remove element by index\n"
+                << "3. Display all elements\n"
+                << "4. Compare two elements\n"
+                << "5. Exit\n"
+                << "Choose an option: ";
+
+            int choice;
+            cin >> choice;
+
+            switch (choice) {
+            case 1: {
+                string type, text;
+                int number;
+                cout << "Enter type (organization/factory/insurance/plant): ";
+                cin >> type;
+                cout << "Enter numeric field (0-1000): ";
+                cin >> number;
+
+                while (number < 0 || number > 1000) {
+                    cout << "Invalid input. Enter a number between 0 and 1000: ";
+                    cin >> number;
+                }
+
+                cin.ignore(); // Clear buffer
+                cout << "Enter string field: ";
+                getline(cin, text);
+
+                Entity* entity = nullptr;
+                if (type == "organization") {
+                    entity = new Organization(number, text);
+                }
+                else if (type == "factory") {
+                    entity = new Factory(number, text);
+                }
+                else if (type == "insurance") {
+                    entity = new InsuranceCompany(number, text);
+                }
+                else if (type == "plant") {
+                    entity = new Plant(number, text);
+                }
+                else {
+                    cout << "Invalid type." << endl;
+                    continue; // Переход к следующей итерации цикла
+                }
+                addEntity(entity);
+                break;
+            }
+            case 2: {
+                int index;
+                cout << "Enter index to remove: ";
+                cin >> index;
+                removeEntity(index);
+                break;
+            }
+            case 3:
+                displayEntities();
+                break;
+            case 4: {
+                int index1, index2;
+                cout << "Enter two indices to compare: ";
+                cin >> index1 >> index2;
+                compareEntities(index1, index2);
+                break;
+            }
+            case 5:
+                cout << "Exiting..." << endl;
+                return;
+            default:
+                cout << "Invalid choice. Try again." << endl;
+            }
+        }
+    }
+};
+
+int main() {
+    Application app;
+    app.run();
+    return 0;
+}
