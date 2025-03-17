@@ -1,0 +1,88 @@
+#include <iostream>
+
+class Color {
+public:
+    virtual void display() = 0;
+    virtual Color* mix(const Color& other) = 0; 
+    virtual ~Color() {}
+};
+
+class RGB : public Color {
+private:
+    int red, green, blue;
+
+public:
+    RGB(int r, int g, int b) : red(r), green(g), blue(b) {}
+
+    void display() override {
+        std::cout << "RGB(" << red << ", " << green << ", " << blue << ")\n";
+    }
+
+    Color* mix(const Color& other) override {
+        const RGB& otherRGB = dynamic_cast<const RGB&>(other);
+        return new RGB((red + otherRGB.red) / 2, (green + otherRGB.green) / 2, (blue + otherRGB.blue) / 2);
+    }
+
+   
+
+   
+    void toCMYK() {
+       
+    }
+
+    
+    void toHSV() {
+        
+    }
+};
+
+class CMYK : public Color {
+private:
+    float cyan, magenta, yellow, black;
+
+public:
+    CMYK(float c, float m, float y, float k) : cyan(c), magenta(m), yellow(y), black(k) {}
+
+    void display() override {
+        std::cout << "CMYK(" << cyan << ", " << magenta << ", " << yellow << ", " << black << ")\n";
+    }
+
+    Color* mix(const Color& other) override {
+        const CMYK& otherCMYK = dynamic_cast<const CMYK&>(other);
+        return new CMYK((cyan + otherCMYK.cyan) / 2, (magenta + otherCMYK.magenta) / 2,
+            (yellow + otherCMYK.yellow) / 2, (black + otherCMYK.black) / 2);
+    }
+
+  
+};
+
+class HSV : public Color {
+private:
+    float hue, saturation, value;
+
+public:
+    HSV(float h, float s, float v) : hue(h), saturation(s), value(v) {}
+
+    void display() override {
+        std::cout << "HSV(" << hue << ", " << saturation << ", " << value << ")\n";
+    }
+
+    Color* mix(const Color& other) override {
+        const HSV& otherHSV = dynamic_cast<const HSV&>(other);
+        return new HSV((hue + otherHSV.hue) / 2, (saturation + otherHSV.saturation) / 2,
+            (value + otherHSV.value) / 2);
+    }
+
+    
+};
+
+int main() {
+    RGB color1(255, 0, 0); 
+    RGB color2(0, 0, 255); 
+
+    Color* mixedColor = color1.mix(color2);
+    mixedColor->display(); 
+
+    delete mixedColor; 
+    return 0;
+}
