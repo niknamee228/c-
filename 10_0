@@ -1,0 +1,79 @@
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import kotlin.random.Random
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            GuessTheNumberGame()
+        }
+    }
+}
+
+@Composable
+fun GuessTheNumberGame() {
+    var targetNumber by remember { mutableStateOf(Random.nextInt(1, 101)) }
+    var playerGuess by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
+    var attempts by remember { mutableStateOf(0) }
+
+    fun resetGame() {
+        targetNumber = Random.nextInt(1, 101)
+        playerGuess = ""
+        message = ""
+        attempts = 0
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        TextField(
+            value = playerGuess,
+            onValueChange = { playerGuess = it },
+            label = { Text("Введите ваше число (1-100)") }
+        )
+        
+        Button(
+            onClick = {
+                if (playerGuess.toIntOrNull() != null) {
+                    attempts++
+                    val guess = playerGuess.toInt()
+                    message = when {
+                        guess < targetNumber -> "Больше!"
+                        guess > targetNumber -> "Меньше!"
+                        else -> "Поздравляем! Вы угадали число за $attempts попыток."
+                    }
+                } else {
+                    message = "Введите корректное число!"
+                }
+            },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(text = "Угадать")
+        }
+        
+        Button(
+            onClick = { resetGame() },
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(text = "Новая игра")
+        }
+        
+        Text(text = message, modifier = Modifier.padding(vertical = 16.dp))
+        Text(text = "Количество попыток: $attempts")
+    }
+}
