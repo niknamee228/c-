@@ -1,0 +1,245 @@
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        var startAdventure = new StartAdventure();
+        var chooseShip = new ChooseShip();
+        var findTreasure = new FindTreasure();
+        var faceEnemies = new FaceEnemies();
+        var stormEncounter = new StormEncounter();
+        var treasureMap = new TreasureMap();
+        var joinCrew = new JoinCrew();
+        var finalBattle = new FinalBattle();
+        var celebrateVictory = new CelebrateVictory();
+
+        startAdventure.SetNext(chooseShip);
+        chooseShip.SetNext(findTreasure);
+        findTreasure.SetNext(faceEnemies);
+        faceEnemies.SetNext(stormEncounter);
+        stormEncounter.SetNext(treasureMap);
+        treasureMap.SetNext(joinCrew);
+        joinCrew.SetNext(finalBattle);
+        finalBattle.SetNext(celebrateVictory);
+
+        // Начало приключения
+        startAdventure.Handle();
+    }
+}
+
+abstract class Challenge
+{
+    protected Challenge nextChallenge;
+
+    public void SetNext(Challenge next)
+    {
+        nextChallenge = next;
+    }
+
+    public abstract void Handle();
+}
+
+class StartAdventure : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("Вы готовы к пиратским приключениям! Начнем ваше приключение.");
+        nextChallenge?.Handle();
+    }
+}
+
+class ChooseShip : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("Какой корабль вы выберете: \"Черная жемчужина\" или \"Синие воды\"?");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "черная жемчужина" || input.ToLower() == "синие воды")
+        {
+            Console.WriteLine("Вы выбрали " + input + ". Ваше приключение начинается!");
+            nextChallenge?.Handle();
+        }
+        else
+        {
+            Console.WriteLine("Неверный выбор. Игра окончена.");
+            EndGame();
+        }
+    }
+
+    private void EndGame()
+    {
+        Console.WriteLine("Игра окончена.");
+        Environment.Exit(0);
+    }
+}
+
+class FindTreasure : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("Вы получили карту сокровищ. Вы хотите отправиться на поиски? (да/нет)");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "да")
+        {
+            Console.WriteLine("Вы отправились на поиски сокровищ!");
+            nextChallenge?.Handle();
+        }
+        else
+        {
+            Console.WriteLine("Вы остаетесь в порт. Игра окончена.");
+            EndGame();
+        }
+    }
+
+    private void EndGame()
+    {
+        Console.WriteLine("Игра окончена.");
+        Environment.Exit(0);
+    }
+}
+
+class FaceEnemies : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("На ваш путь нападают вражеские пираты! Какие ваши действия: сражаться или убежать?");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "сражаться")
+        {
+            Console.WriteLine("Вы победили врагов и сохранили свою честь!");
+            nextChallenge?.Handle();
+        }
+        else
+        {
+            Console.WriteLine("Вы сбежали и ускользнули от опасности.");
+            nextChallenge?.Handle();
+        }
+    }
+}
+
+class StormEncounter : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("В море начинается мощный шторм. Как действовать: управлять кораблем или искать укрытие?");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "управлять")
+        {
+            Console.WriteLine("Вы успешно прошли через бурю.");
+            nextChallenge?.Handle();
+        }
+        else
+        {
+            Console.WriteLine("Ваше укрытие оказалось недостаточно надежным. Игра окончена.");
+            EndGame();
+        }
+    }
+
+    private void EndGame()
+    {
+        Console.WriteLine("Игра окончена.");
+        Environment.Exit(0);
+    }
+}
+
+class TreasureMap : Challenge
+{
+    public override void Handle()
+    {
+
+        Console.WriteLine("Вы нашли старую карту сокровищ. Хотите ей воспользоваться? (да/нет)");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "да")
+        {
+            Console.WriteLine("Вы следуете по карте и находите сокровища!");
+            nextChallenge?.Handle();
+        }
+        else
+        {
+            Console.WriteLine("Вы решили не рисковать. Игра окончена.");
+            EndGame();
+        }
+    }
+
+    private void EndGame()
+    {
+        Console.WriteLine("Игра окончена.");
+        Environment.Exit(0);
+    }
+}
+
+class JoinCrew : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("Вы встречаете команду. Хотите принять их в свою команду? (да/нет)");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "да")
+        {
+            Console.WriteLine("Команда готова к дальнейшим приключениям!");
+            nextChallenge?.Handle();
+        }
+        else
+        {
+            Console.WriteLine("Вы остаетесь в одиночестве. Игра окончена.");
+            EndGame();
+        }
+    }
+
+    private void EndGame()
+    {
+        Console.WriteLine("Игра окончена.");
+        Environment.Exit(0);
+    }
+}
+
+class FinalBattle : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("Вас ждёт финальная битва с пиратским капитаном! Сражаться или отступить?");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "сражаться")
+        {
+            Console.WriteLine("Вы одержали победу в финальной битве! Поздравляю!");
+            nextChallenge?.Handle();
+        }
+        else
+        {
+            Console.WriteLine("Вы решили отступить и сохранить силы. Игра окончена.");
+            EndGame();
+        }
+    }
+
+    private void EndGame()
+    {
+        Console.WriteLine("Игра окончена.");
+        Environment.Exit(0);
+    }
+}
+
+class CelebrateVictory : Challenge
+{
+    public override void Handle()
+    {
+        Console.WriteLine("Вы празднуете свою победу с командой. Как вы хотите провести время: (отдыхать/искать новые приключения)?");
+        var input = Console.ReadLine();
+        if (input.ToLower() == "отдыхать")
+        {
+            Console.WriteLine("Вы насладились покоем после тяжелых боев.");
+        }
+        else
+        {
+            Console.WriteLine("Вы решаете продолжать искать приключения! Новые горизонты ждут вас.");
+        }
+
+        EndGame();
+    }
+
+    private void EndGame()
+    {
+        Console.WriteLine("Игра окончена.");
+        Environment.Exit(0);
+    }
+}
