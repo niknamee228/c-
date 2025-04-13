@@ -1,0 +1,258 @@
+#include <iostream>
+#include <cstring>
+#include <ctime>
+#include <iomanip>
+
+
+const int MAX_PRODUCTS = 100;
+
+const int MAX_CART_ITEMS = 50;
+
+
+class DiscountStrategy {
+public:
+    virtual ~DiscountStrategy() = default;
+    virtual double applyDiscount(double price, int quantity) const = 0;
+};
+
+
+class PercentageDiscount : public DiscountStrategy {
+    double percentage;
+public:
+    explicit PercentageDiscount(double p) : percentage(p) {}
+    double applyDiscount(double price, int quantity) const override {
+        return price * quantity * percentage / 100.0;
+    }
+};
+
+class FixedDiscount : public DiscountStrategy {
+    double amount;
+public:
+    explicit FixedDiscount(double a) : amount(a) {}
+    double applyDiscount(double price, int quantity) const override {
+        return amount * quantity;
+    }
+};
+
+
+class Product {
+    int id;
+    char name[50];
+    double price;
+    char category[30];
+    char barcode[13];
+public:
+    Product() : id(0), price(0.0) {
+        name[0] = '\0';
+        category[0] = '\0';
+        barcode[0] = '\0';
+    }
+    
+    Product(int i, const char* n, double p, const char* c, const char* b) : id(i), price(p) {
+        strncpy(name, n, 49); name[49] = '\0';
+        strncpy(category, c, 29); category[29] = '\0';
+        strncpy(barcode, b, 12); barcode[12] = '\0';
+    }
+
+    int getId() const { return id; }
+    const char* getName() const { return name; }
+    double getPrice() const { return price; }
+    const char* getCategory() const { return category; }
+    const char* getBarcode() const { return barcode; }
+};
+
+
+class CartItem {
+    Product product;
+    int quantity;
+    DiscountStrategy* discount;
+    bool isPackage;
+public:
+    CartItem() : quantity(0), discount(nullptr), isPackage(false) {}
+    CartItem(const Product& p, int q, bool ip = false) 
+        : product(p), quantity(q), discount(nullptr), isPackage(ip) {}
+    ~CartItem() { delete discount; }
+
+    void setDiscount(DiscountStrategy* d) { 
+        delete discount;
+        discount = d; 
+    }
+    
+    double getTotal() const {
+        double total = product.getPrice() * quantity;
+        if (discount) {
+            total -= discount->applyDiscount(product.getPrice(), quantity);
+        }
+        return total;
+    }
+    
+    void increaseQuantity() { quantity++; }
+    const Product& getProduct() const { return product; }
+    int getQuantity() const { return quantity; }
+    bool getIsPackage() const { return isPackage; }
+};
+
+
+class Receipt {
+    CartItem items[MAX_CART_ITEMS];
+    int itemCount;
+    double total;
+    double discountTotal;
+    std::time_t date;
+public:
+    Receipt() : itemCount(0), total(0.0), discountTotal(0.0), date(std::time(nullptr)) {}
+    
+    void addItem(const CartItem& item) {
+        if (itemCount < MAX_CART_ITEMS) {
+            items[itemCount++] = item;
+        }
+    }
+    
+    void calculateTotals() {
+        total = 0.0;
+        discountTotal = 0.0;
+        for (int i = 0; i < itemCount; ++i) {
+            total += items[i].getProduct().getPrice() * items[i].getQuantity();
+            discountTotal += (items[i].getProduct().getPrice() * items[i].getQuantity() - items[i].getTotal());
+        }
+    }
+    
+    void print() const {
+        std::cout << "Чек покупки\n";
+        std::cout << "Дата: " << std::ctime(&date) << "\n";
+        std::cout << "---------------------------------\n";
+        
+        for (int i = 0; i < itemCount; ++i) {
+            std::cout << std::left << std::setw(20) << items[i].getProduct().getName() 
+                      << std::right << std::setw(5) << items[i].getQuantity() 
+                      << " x " << std::fixed << std::setprecision(2) << items[i].getProduct().getPrice()
+                      << " = " << items[i].getTotal() << "\n";
+        }
+        
+        std::cout << "---------------------------------\n";
+        std::cout << "Итого: " << total << "\n";
+        std::cout << "Скидка: " << discountTotal << "\n";
+        std::cout << "К оплате: " << (total - discountTotal) << "\n";
+    }
+};
+
+
+class SelfCheckoutMachine {
+    Product products[MAX_PRODUCTS];
+    int productCount;
+    CartItem cart[MAX_CART_ITEMS];
+    int cartItemCount;
+    
+    void loadProducts() {
+        // Загрузка товаров
+        addProduct(Product(1, "Молоко", 85.0, "Молочные", "123456789012"));
+        addProduct(Product(2, "Хлеб", 45.0, "Хлебобулочные", "234567890123"));
+        addProduct(Product(3, "Пакет", 15.0, "Упаковка", "345678901234"));
+    }
+    
+    void addProduct(const Product& p) {
+        if (productCount < MAX_PRODUCTS) {
+            products[productCount++] = p;
+        }
+    }
+    
+    const Product* findProductByBarcode(const char* barcode) const {
+        for (int i = 0; i < productCount; ++i) {
+            if (strcmp(products[i].getBarcode(), barcode) == 0) {
+                return &products[i];
+            }
+        }
+        return nullptr;
+    }
+    
+public:
+    SelfCheckoutMachine() : productCount(0), cartItemCount(0) { 
+        loadProducts(); 
+    }
+    
+    ~SelfCheckoutMachine() {
+        // Очистка скидок в корзине
+        for (int i = 0; i < cartItemCount; ++i) {
+            cart[i].setDiscount(nullptr);
+        }
+    }
+    
+    void scanProduct(const char* barcode) {
+        const Product* product = findProductByBarcode(barcode);
+        if (product && cartItemCount < MAX_CART_ITEMS) {
+            // Проверяем, есть ли уже такой товар в корзине
+            for (int i = 0; i < cartItemCount; ++i) {
+                if (cart[i].getProduct().getId() == product->getId()) {
+                    cart[i].increaseQuantity();
+                    return;
+                }
+            }
+           
+            cart[cartItemCount++] = CartItem(*product, 1);
+        }
+    }
+    
+    void addPackage() {
+        const Product* package = findProductByBarcode("345678901234");
+        if (package && cartItemCount < MAX_CART_ITEMS) {
+            cart[cartItemCount++] = CartItem(*package, 1, true);
+        }
+    }
+    
+    void applyDiscount(const char* barcode, DiscountStrategy* discount) {
+        const Product* product = findProductByBarcode(barcode);
+        if (product) {
+            for (int i = 0; i < cartItemCount; ++i) {
+                if (cart[i].getProduct().getId() == product->getId()) {
+                    cart[i].setDiscount(discount);
+                }
+            }
+        }
+    }
+    
+    Receipt checkout() {
+        Receipt receipt;
+        
+        for (int i = 0; i < cartItemCount; ++i) {
+            receipt.addItem(cart[i]);
+        }
+        
+        receipt.calculateTotals();
+        cartItemCount = 0; // Очищаем корзину
+        return receipt;
+    }
+    
+    void showCart() const {
+        std::cout << "Текущая корзина:\n";
+        for (int i = 0; i < cartItemCount; ++i) {
+            std::cout << cart[i].getProduct().getName() << " - " 
+                      << cart[i].getQuantity() << " x " 
+                      << cart[i].getProduct().getPrice() << " = " 
+                      << cart[i].getTotal() << "\n";
+        }
+    }
+};
+
+
+int main() {
+    SelfCheckoutMachine machine;
+    
+   
+    machine.scanProduct("123456789012"); // Молоко
+    machine.scanProduct("123456789012"); // Еще одно молоко
+    machine.scanProduct("234567890123"); // Хлеб
+    
+   
+    machine.addPackage();
+    
+    
+    machine.applyDiscount("123456789012", new PercentageDiscount(10));
+    
+
+    machine.showCart();
+
+    Receipt receipt = machine.checkout();
+    receipt.print();
+    
+    return 0;
+}
