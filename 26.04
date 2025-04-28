@@ -1,0 +1,152 @@
+dependencies {
+    implementation "androidx.navigation:navigation-compose:2.7.7"
+    implementation "androidx.compose.material:material:1.6.4"
+} 
+sealed class Screen(val route: String) {
+    object Home : Screen("home")
+    object Profile : Screen("profile")
+    object Settings : Screen("settings")
+    
+
+}
+@Composable
+fun MainApp() {
+    val navController = rememberNavController()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("My App") },
+                actions = {
+                    // Кнопки действий в TopAppBar
+                    IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            composable(Screen.Home.route) { HomeScreen(navController) }
+            composable(Screen.Profile.route) { ProfileScreen(navController) }
+            composable(Screen.Settings.route) { SettingsScreen(navController) }
+        }
+    }
+}
+@Composable
+fun HomeScreen(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Home Screen", style = MaterialTheme.typography.h4)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { navController.navigate(Screen.Profile.route) }) {
+            Text("Go to Profile")
+        }
+    }
+}
+@Composable
+fun ProfileScreen(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Profile Screen", style = MaterialTheme.typography.h4)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { navController.popBackStack() }) {
+            Text("Back to Home")
+        }
+    }
+}
+@Composable
+fun SettingsScreen(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Settings Screen", style = MaterialTheme.typography.h4)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = { navController.popBackStack() }) {
+            Text("Back")
+        }
+    }
+}
+@Composable
+fun MyTopAppBar(
+    navController: NavController,
+    title: String,
+    showBackButton: Boolean = false
+) {
+    TopAppBar(
+        title = { Text(title) },
+        navigationIcon = {
+            if (showBackButton) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            }
+        },
+        actions = {
+            IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings")
+            }
+        }
+    )
+}
+@Composable
+fun MainApp() {
+    val navController = rememberNavController()
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    
+    Scaffold(
+        topBar = {
+            MyTopAppBar(
+                navController = navController,
+                title = when (currentRoute) {
+                    Screen.Home.route -> "Home"
+                    Screen.Profile.route -> "Profile"
+                    Screen.Settings.route -> "Settings"
+                    else -> "My App"
+                },
+                showBackButton = currentRoute != Screen.Home.route
+            )
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            composable(Screen.Home.route) { HomeScreen(navController) }
+            composable(Screen.Profile.route) { ProfileScreen(navController) }
+            composable(Screen.Settings.route) { SettingsScreen(navController) }
+        }
+    }
+}
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            YourAppTheme {
+                MainApp()
+            }
+        }
+    }
+}
