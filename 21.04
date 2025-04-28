@@ -1,0 +1,127 @@
+data class Pizza(
+    val dough: String,
+    val sauce: String,
+    val topping: List<String>
+) {
+    fun describe(): String {
+        return "Пицца: Тесто - $dough, Соус - $sauce, Начинка - ${topping.joinToString(", ")}"
+    }
+}
+interface IPizzaBuilder {
+    fun setDough(dough: String): IPizzaBuilder
+    fun setSauce(sauce: String): IPizzaBuilder
+    fun setTopping(topping: List<String>): IPizzaBuilder
+    fun build(): Pizza
+}
+class MargheritaPizzaBuilder : IPizzaBuilder {
+    private var dough: String = ""
+    private var sauce: String = ""
+    private var topping: List<String> = listOf()
+
+    override fun setDough(dough: String): IPizzaBuilder {
+        this.dough = dough
+        return this
+    }
+
+    override fun setSauce(sauce: String): IPizzaBuilder {
+        this.sauce = sauce
+        return this
+    }
+
+    override fun setTopping(topping: List<String>): IPizzaBuilder {
+        this.topping = topping
+        return this
+    }
+
+    override fun build(): Pizza {
+        // Установка значений по умолчанию для пиццы Маргарита
+        if (dough.isEmpty()) dough = "тонкое"
+        if (sauce.isEmpty()) sauce = "томатный"
+        if (topping.isEmpty()) topping = listOf("моцарелла", "помидоры", "базилик")
+        
+        return Pizza(dough, sauce, topping)
+    }
+}
+class PepperoniPizzaBuilder : IPizzaBuilder {
+    private var dough: String = ""
+    private var sauce: String = ""
+    private var topping: List<String> = listOf()
+
+    override fun setDough(dough: String): IPizzaBuilder {
+        this.dough = dough
+        return this
+    }
+
+    override fun setSauce(sauce: String): IPizzaBuilder {
+        this.sauce = sauce
+        return this
+    }
+
+    override fun setTopping(topping: List<String>): IPizzaBuilder {
+        this.topping = topping
+        return this
+    }
+
+    override fun build(): Pizza {
+        // Установка значений по умолчанию для пиццы Пепперони
+        if (dough.isEmpty()) dough = "традиционное"
+        if (sauce.isEmpty()) sauce = "томатный острый"
+        if (topping.isEmpty()) topping = listOf("пепперони", "моцарелла", "перец чили")
+        
+        return Pizza(dough, sauce, topping)
+    }
+}
+class PizzaDirector(private val builder: IPizzaBuilder) {
+    fun makePizza(): Pizza {
+        return builder.build()
+    }
+    
+    fun makeCustomPizza(
+        dough: String? = null,
+        sauce: String? = null,
+        topping: List<String>? = null
+    ): Pizza {
+        dough?.let { builder.setDough(it) }
+        sauce?.let { builder.setSauce(it) }
+        topping?.let { builder.setTopping(it) }
+        return builder.build()
+    }
+}
+fun main() {
+    // Создаем строителей
+    val margheritaBuilder = MargheritaPizzaBuilder()
+    val pepperoniBuilder = PepperoniPizzaBuilder()
+    
+    // Создаем директоров
+    val margheritaDirector = PizzaDirector(margheritaBuilder)
+    val pepperoniDirector = PizzaDirector(pepperoniBuilder)
+    
+    // Создаем стандартные пиццы
+    val standardMargherita = margheritaDirector.makePizza()
+    val standardPepperoni = pepperoniDirector.makePizza()
+    
+    println("Стандартная Маргарита: ${standardMargherita.describe()}")
+    println("Стандартная Пепперони: ${standardPepperoni.describe()}")
+    
+    // Создаем кастомные пиццы
+    val customMargherita = margheritaDirector.makeCustomPizza(
+        dough = "пышное",
+        topping = listOf("моцарелла", "черри", "руккола")
+    )
+    
+    val customPepperoni = pepperoniDirector.makeCustomPizza(
+        sauce = "сливочный",
+        topping = listOf("пепперони", "грибы", "лук")
+    )
+    
+    println("\nКастомная Маргарита: ${customMargherita.describe()}")
+    println("Кастомная Пепперони: ${customPepperoni.describe()}")
+    
+    // Альтернативный способ без Director
+    val anotherPepperoni = PepperoniPizzaBuilder()
+        .setDough("бездрожжевое")
+        .setTopping(listOf("пепперони", "оливки"))
+        .build()
+    
+    println("\nЕще одна Пепперони: ${anotherPepperoni.describe()}")
+}
