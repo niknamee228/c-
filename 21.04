@@ -34,7 +34,7 @@ class MargheritaPizzaBuilder : IPizzaBuilder {
     }
 
     override fun build(): Pizza {
-        // Установка значений по умолчанию для пиццы Маргарита
+      
         if (dough.isEmpty()) dough = "тонкое"
         if (sauce.isEmpty()) sauce = "томатный"
         if (topping.isEmpty()) topping = listOf("моцарелла", "помидоры", "базилик")
@@ -63,7 +63,7 @@ class PepperoniPizzaBuilder : IPizzaBuilder {
     }
 
     override fun build(): Pizza {
-        // Установка значений по умолчанию для пиццы Пепперони
+  
         if (dough.isEmpty()) dough = "традиционное"
         if (sauce.isEmpty()) sauce = "томатный острый"
         if (topping.isEmpty()) topping = listOf("пепперони", "моцарелла", "перец чили")
@@ -88,22 +88,22 @@ class PizzaDirector(private val builder: IPizzaBuilder) {
     }
 }
 fun main() {
-    // Создаем строителей
+
     val margheritaBuilder = MargheritaPizzaBuilder()
     val pepperoniBuilder = PepperoniPizzaBuilder()
     
-    // Создаем директоров
+   
     val margheritaDirector = PizzaDirector(margheritaBuilder)
     val pepperoniDirector = PizzaDirector(pepperoniBuilder)
     
-    // Создаем стандартные пиццы
+    
     val standardMargherita = margheritaDirector.makePizza()
     val standardPepperoni = pepperoniDirector.makePizza()
     
     println("Стандартная Маргарита: ${standardMargherita.describe()}")
     println("Стандартная Пепперони: ${standardPepperoni.describe()}")
     
-    // Создаем кастомные пиццы
+    
     val customMargherita = margheritaDirector.makeCustomPizza(
         dough = "пышное",
         topping = listOf("моцарелла", "черри", "руккола")
@@ -117,7 +117,7 @@ fun main() {
     println("\nКастомная Маргарита: ${customMargherita.describe()}")
     println("Кастомная Пепперони: ${customPepperoni.describe()}")
     
-    // Альтернативный способ без Director
+ 
     val anotherPepperoni = PepperoniPizzaBuilder()
         .setDough("бездрожжевое")
         .setTopping(listOf("пепперони", "оливки"))
