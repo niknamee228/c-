@@ -1,0 +1,210 @@
+1)using System;
+using System.Collections.Generic;
+
+
+public delegate bool NumberFilter(int number);
+
+class Program
+{
+
+    static List<int> FilterNumbers(List<int> numbers, NumberFilter filter)
+    {
+        List<int> result = new List<int>();
+        foreach (int number in numbers)
+        {
+            if (filter(number))
+            {
+                result.Add(number);
+            }
+        }
+        return result;
+    }
+
+
+    static bool IsEven(int number)
+    {
+        return number % 2 == 0;
+    }
+
+  
+    static bool IsPositive(int number)
+    {
+        return number > 0;
+    }
+
+    static void Main()
+    {
+      
+        List<int> numbers = new List<int> { -5, 2, 0, 13, -8, 7, 4, -1, 10 };
+
+       
+        List<int> evenNumbers = FilterNumbers(numbers, IsEven);
+        Console.WriteLine("Четные числа: " + string.Join(", ", evenNumbers));
+
+      
+        List<int> positiveNumbers = FilterNumbers(numbers, IsPositive);
+        Console.WriteLine("Положительные числа: " + string.Join(", ", positiveNumbers));
+
+      
+        var employees = new[]
+        {
+            new { Name = "Ivan", Department = "IT", Salary = 100000 },
+            new { Name = "Petr", Department = "HR", Salary = 80000 },
+            new { Name = "Alexey", Department = "IT", Salary = 120000 },
+            new { Name = "Mary", Department = "HR", Salary = 75000 },
+            new { Name = "Darya", Department = "IT", Salary = 95000 },
+            new { Name = "Sergey", Department = "Finance", Salary = 110000 }
+        };
+
+        double avgSalary = employees.Average(e => e.Salary);
+
+        var result = employees
+            .Where(e => e.Salary > avgSalary)
+            .GroupBy(e => e.Department)
+            .Select(g => new
+            {
+                Department = g.Key,
+                Employees = g.OrderByDescending(e => e.Name).Select(e => $"{e.Name} ({e.Salary} rub.)")
+            });
+
+        Console.WriteLine("\nРезультат обработки сотрудников:");
+        foreach (var group in result)
+        {
+            Console.WriteLine($"Department: {group.Department}");
+            foreach (var emp in group.Employees)
+            {
+                Console.WriteLine($"- {emp}");
+            }
+            Console.WriteLine();
+        }
+    }
+}
+
+
+2)using System;
+using System.Linq;
+using System.Collections.Generic;
+
+class Program
+{
+    static void Main()
+    {
+      
+        Func<List<int>, int, List<int>> addNumberToList = (list, number) =>
+        {
+            return list.Select(x => x + number).ToList();
+        };
+
+       
+        List<int> numbers = new List<int> { 1, 2, 3, 4, 5 };
+        int numberToAdd = 10;
+        
+        List<int> result = addNumberToList(numbers, numberToAdd);
+        
+        Console.WriteLine("Исходный список: " + string.Join(", ", numbers));
+        Console.WriteLine($"Список после добавления {numberToAdd}: " + string.Join(", ", result));
+
+     
+        var employees = new[]
+        {
+            new { Name = "Ivan", Department = "IT", Salary = 100000 },
+            new { Name = "Petr", Department = "HR", Salary = 80000 },
+            new { Name = "Alexey", Department = "IT", Salary = 120000 },
+            new { Name = "Mary", Department = "HR", Salary = 75000 },
+            new { Name = "Darya", Department = "IT", Salary = 95000 },
+            new { Name = "Sergey", Department = "Finance", Salary = 110000 }
+        };
+
+        double avgSalary = employees.Average(e => e.Salary);
+
+        var employeeResult = employees
+            .Where(e => e.Salary > avgSalary)
+            .GroupBy(e => e.Department)
+            .Select(g => new
+            {
+                Department = g.Key,
+                Employees = g.OrderByDescending(e => e.Name).Select(e => $"{e.Name} ({e.Salary} rub.)")
+            });
+
+        Console.WriteLine("\nРезультат обработки сотрудников:");
+        foreach (var group in employeeResult)
+        {
+            Console.WriteLine($"Department: {group.Department}");
+            foreach (var emp in group.Employees)
+            {
+                Console.WriteLine($"- {emp}");
+            }
+            Console.WriteLine();
+        }
+    }
+}
+3)using System;
+using System.Linq;
+using System.Collections.Generic;
+
+class Program
+{
+    static void Main()
+    {
+        var employees = new[]
+        {
+            new { Name = "Ivan", Department = "IT", Salary = 100000 },
+            new { Name = "Petr", Department = "HR", Salary = 80000 },
+            new { Name = "Alexey", Department = "IT", Salary = 120000 },
+            new { Name = "Mary", Department = "HR", Salary = 75000 },
+            new { Name = "Darya", Department = "IT", Salary = 95000 },
+            new { Name = "Sergey", Department = "Finance", Salary = 110000 }
+        };
+
+     
+        var top3Employees = employees
+            .OrderByDescending(e => e.Salary)
+            .Take(3)
+            .Select(e => $"{e.Name} ({e.Department}) - {e.Salary} руб.");
+
+        Console.WriteLine("ТОП-3 самых высокооплачиваемых сотрудников:");
+        foreach (var emp in top3Employees)
+        {
+            Console.WriteLine($"- {emp}");
+        }
+        Console.WriteLine();
+
+        
+        var departmentWithHighestAvgSalary = employees
+            .GroupBy(e => e.Department)
+            .Select(g => new
+            {
+                Department = g.Key,
+                AverageSalary = g.Average(e => e.Salary)
+            })
+            .OrderByDescending(d => d.AverageSalary)
+            .First();
+
+        Console.WriteLine($"Департамент с самой высокой средней зарплатой: {departmentWithHighestAvgSalary.Department}");
+        Console.WriteLine($"Средняя зарплата: {departmentWithHighestAvgSalary.AverageSalary:F2} руб.");
+        Console.WriteLine();
+
+       
+        double avgSalary = employees.Average(e => e.Salary);
+
+        var result = employees
+            .Where(e => e.Salary > avgSalary)
+            .GroupBy(e => e.Department)
+            .Select(g => new
+            {
+                Department = g.Key,
+                Employees = g.OrderByDescending(e => e.Name).Select(e => $"{e.Name} ({e.Salary} rub.)")
+            });
+
+        Console.WriteLine("Сотрудники с зарплатой выше средней по компании:");
+        foreach (var group in result)
+        {
+            Console.WriteLine($"Department: {group.Department}");
+            foreach (var emp in group.Employees)
+            {
+                Console.WriteLine($"- {emp}");
+            }
+            Console.WriteLine();
+        }
+    }
+}
