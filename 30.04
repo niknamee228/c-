@@ -1,0 +1,49 @@
+using System;
+using System.IO;
+
+class FileMerger
+{
+    static void Main()
+    {
+        string file1Path = "file1.txt";
+        string file2Path = "file2.txt";
+        string mergedFilePath = "merged.txt";
+
+        try
+        {
+           
+            if (!File.Exists(file1Path) || !File.Exists(file2Path))
+            {
+                Console.WriteLine("Один или оба исходных файла не найдены!");
+                return;
+            }
+
+          
+            using (StreamWriter writer = new StreamWriter(mergedFilePath))
+            {
+                
+                WriteFileContentWithLabel(writer, file1Path, "FILE1");
+                
+                
+                WriteFileContentWithLabel(writer, file2Path, "FILE2");
+            }
+
+            Console.WriteLine($"Файлы успешно объединены в {mergedFilePath}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Произошла ошибка: {ex.Message}");
+        }
+    }
+
+    static void WriteFileContentWithLabel(StreamWriter writer, string filePath, string label)
+    {
+        string[] lines = File.ReadAllLines(filePath);
+        
+        foreach (string line in lines)
+        {
+          
+            writer.WriteLine($"[{label}] {line}");
+        }
+    }
+}
