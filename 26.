@@ -1,0 +1,246 @@
+using System;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+
+public class WindowsCalculator
+{
+   
+    [DllImport("user32.dll")]
+    private static extern IntPtr CreateWindowEx(
+        uint dwExStyle,
+        string lpClassName,
+        string lpWindowName,
+        uint dwStyle,
+        int x,
+        int y,
+        int nWidth,
+        int nHeight,
+        IntPtr hWndParent,
+        IntPtr hMenu,
+        IntPtr hInstance,
+        IntPtr lpParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool UpdateWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
+
+ 
+    private const uint WS_OVERLAPPEDWINDOW = 0x00CF0000;
+    private const uint WS_VISIBLE = 0x10000000;
+    private const int SW_SHOW = 5;
+
+   
+    public static void Main()
+    {
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+        Application.Run(new CalculatorForm());
+    }
+}
+
+
+public class CalculatorForm : Form
+{
+    private TextBox display;
+    private Button[] numberButtons;
+    private Button[] operationButtons;
+    private Button equalsButton;
+    private Button clearButton;
+    private Button decimalButton;
+    
+    private double firstNumber = 0;
+    private double secondNumber = 0;
+    private string operation = "";
+    private bool isNewOperation = true;
+
+    public CalculatorForm()
+    {
+        InitializeCalculator();
+    }
+
+    private void InitializeCalculator()
+    {
+    
+        this.Text = "Калькулятор Windows";
+        this.Size = new System.Drawing.Size(300, 400);
+        this.FormBorderStyle = FormBorderStyle.FixedSingle;
+        this.MaximizeBox = false;
+
+  
+        display = new TextBox
+        {
+            Location = new System.Drawing.Point(10, 10),
+            Size = new System.Drawing.Size(260, 40),
+            Font = new System.Drawing.Font("Microsoft Sans Serif", 16),
+            TextAlign = HorizontalAlignment.Right,
+            ReadOnly = true
+        };
+        this.Controls.Add(display);
+
+        // Создание кнопок с цифрами
+        numberButtons = new Button[10];
+        for (int i = 0; i < 10; i++)
+        {
+            numberButtons[i] = new Button
+            {
+                Text = i.ToString(),
+                Tag = i,
+                Size = new System.Drawing.Size(60, 60),
+                Font = new System.Drawing.Font("Microsoft Sans Serif", 12)
+            };
+            numberButtons[i].Click += NumberButton_Click;
+        }
+
+   
+        numberButtons[7].Location = new System.Drawing.Point(10, 70);
+        numberButtons[8].Location = new System.Drawing.Point(80, 70);
+        numberButtons[9].Location = new System.Drawing.Point(150, 70);
+        
+        numberButtons[4].Location = new System.Drawing.Point(10, 140);
+        numberButtons[5].Location = new System.Drawing.Point(80, 140);
+        numberButtons[6].Location = new System.Drawing.Point(150, 140);
+        
+        numberButtons[1].Location = new System.Drawing.Point(10, 210);
+        numberButtons[2].Location = new System.Drawing.Point(80, 210);
+        numberButtons[3].Location = new System.Drawing.Point(150, 210);
+        
+        numberButtons[0].Location = new System.Drawing.Point(80, 280);
+
+     
+        for (int i = 0; i < 10; i++)
+        {
+            this.Controls.Add(numberButtons[i]);
+        }
+
+        
+        operationButtons = new Button[4];
+        string[] operations = { "+", "-", "*", "/" };
+        
+        for (int i = 0; i < 4; i++)
+        {
+            operationButtons[i] = new Button
+            {
+                Text = operations[i],
+                Tag = operations[i],
+                Size = new System.Drawing.Size(60, 60),
+                Font = new System.Drawing.Font("Microsoft Sans Serif", 12)
+            };
+            operationButtons[i].Click += OperationButton_Click;
+            operationButtons[i].Location = new System.Drawing.Point(220, 70 + i * 70);
+            this.Controls.Add(operationButtons[i]);
+        }
+
+     
+        equalsButton = new Button
+        {
+            Text = "=",
+            Size = new System.Drawing.Size(60, 60),
+            Font = new System.Drawing.Font("Microsoft Sans Serif", 12),
+            Location = new System.Drawing.Point(220, 280)
+        };
+        equalsButton.Click += EqualsButton_Click;
+        this.Controls.Add(equalsButton);
+
+       
+        clearButton = new Button
+        {
+            Text = "C",
+            Size = new System.Drawing.Size(60, 60),
+            Font = new System.Drawing.Font("Microsoft Sans Serif", 12),
+            Location = new System.Drawing.Point(10, 280)
+        };
+        clearButton.Click += ClearButton_Click;
+        this.Controls.Add(clearButton);
+
+        
+        decimalButton = new Button
+        {
+            Text = ".",
+            Size = new System.Drawing.Size(60, 60),
+            Font = new System.Drawing.Font("Microsoft Sans Serif", 12),
+            Location = new System.Drawing.Point(150, 280)
+        };
+        decimalButton.Click += DecimalButton_Click;
+        this.Controls.Add(decimalButton);
+    }
+
+   
+    private void NumberButton_Click(object sender, EventArgs e)
+    {
+        Button button = (Button)sender;
+        
+        if (isNewOperation)
+        {
+            display.Text = button.Text;
+            isNewOperation = false;
+        }
+        else
+        {
+            display.Text += button.Text;
+        }
+    }
+
+    private void OperationButton_Click(object sender, EventArgs e)
+    {
+        Button button = (Button)sender;
+        firstNumber = double.Parse(display.Text);
+        operation = button.Tag.ToString();
+        isNewOperation = true;
+    }
+
+    private void EqualsButton_Click(object sender, EventArgs e)
+    {
+        if (!isNewOperation)
+        {
+            secondNumber = double.Parse(display.Text);
+            
+            switch (operation)
+            {
+                case "+":
+                    display.Text = (firstNumber + secondNumber).ToString();
+                    break;
+                case "-":
+                    display.Text = (firstNumber - secondNumber).ToString();
+                    break;
+                case "*":
+                    display.Text = (firstNumber * secondNumber).ToString();
+                    break;
+                case "/":
+                    if (secondNumber != 0)
+                        display.Text = (firstNumber / secondNumber).ToString();
+                    else
+                        display.Text = "Ошибка";
+                    break;
+            }
+            
+            isNewOperation = true;
+        }
+    }
+
+    private void ClearButton_Click(object sender, EventArgs e)
+    {
+        display.Text = "0";
+        firstNumber = 0;
+        secondNumber = 0;
+        operation = "";
+        isNewOperation = true;
+    }
+
+    private void DecimalButton_Click(object sender, EventArgs e)
+    {
+        if (isNewOperation)
+        {
+            display.Text = "0.";
+            isNewOperation = false;
+        }
+        else if (!display.Text.Contains("."))
+        {
+            display.Text += ".";
+        }
+    }
+}
