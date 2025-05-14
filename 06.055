@@ -1,0 +1,95 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+
+class Program
+{
+    private static List<int> numbers = new List<int>();
+    private static readonly object lockObj = new object();
+    private static bool isRunning = true;
+    private static Random random = new Random();
+
+    static void Main(string[] args)
+    {
+    
+        for (int i = 0; i < 10; i++)
+        {
+            numbers.Add(random.Next(1, 100));
+        }
+
+        Console.WriteLine("Исходный список:");
+        PrintList(numbers);
+
+      
+        Thread sortThread = new Thread(SortList);
+        sortThread.Start();
+
+      
+        Thread observerThread = new Thread(ObserveList);
+        observerThread.Start();
+
+        Console.WriteLine("Нажмите любую клавишу для остановки...");
+        Console.ReadKey();
+
+        isRunning = false;
+        sortThread.Join();
+        observerThread.Join();
+    }
+
+    static void SortList()
+    {
+        while (isRunning)
+        {
+            Thread.Sleep(100); // Частота сортировки - 100 мс
+
+            lock (lockObj)
+            {
+                numbers.Sort(); // Сортируем список
+            }
+        }
+    }
+
+    static void ObserveList()
+    {
+        List<int> previousList = new List<int>(numbers);
+
+        while (isRunning)
+        {
+            Thread.Sleep(50); // Частота опроса - 50 мс
+
+            lock (lockObj)
+            {
+                
+                if (!ListsAreEqual(numbers, previousList))
+                {
+                    Console.WriteLine("Список изменился:");
+                    PrintList(numbers);
+                    previousList = new List<int>(numbers);
+                }
+            }
+        }
+    }
+
+    static bool ListsAreEqual(List<int> list1, List<int> list2)
+    {
+        if (list1.Count != list2.Count)
+            return false;
+
+        for (int i = 0; i < list1.Count; i++)
+        {
+            if (list1[i] != list2[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    static void PrintList(List<int> list)
+    {
+        foreach (var num in list)
+        {
+            Console.Write(num + " ");
+        }
+        Console.WriteLine();
+    }
+}
