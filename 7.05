@@ -1,0 +1,106 @@
+1)using System;
+using System.IO;
+using System.Threading;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            Console.WriteLine("Usage: program.exe <search_word> <file1> [file2] [file3] ...");
+            return;
+        }
+
+        string searchWord = args[0];
+        string[] filePaths = new string[args.Length - 1];
+        Array.Copy(args, 1, filePaths, 0, args.Length - 1);
+
+        
+        Thread[] threads = new Thread[filePaths.Length];
+        for (int i = 0; i < filePaths.Length; i++)
+        {
+            string filePath = filePaths[i];
+            threads[i] = new Thread(() => SearchWordInFile(searchWord, filePath));
+            threads[i].Start();
+        }
+
+    
+        foreach (Thread thread in threads)
+        {
+            thread.Join();
+        }
+    }
+
+    static void SearchWordInFile(string searchWord, string filePath)
+    {
+        try
+        {
+            string content = File.ReadAllText(filePath);
+            if (content.Contains(searchWord))
+            {
+                Console.WriteLine($"Found '{searchWord}' in {filePath}");
+            }
+            else
+            {
+                Console.WriteLine($"'{searchWord}' not found in {filePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing {filePath}: {ex.Message}");
+        }
+    }
+}
+2)using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
+using System.Net;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Please provide image URL");
+            return;
+        }
+
+        string imageUrl = args[0];
+        string outputPath = "resized_image.jpg";
+
+        try
+        {
+       
+            using (WebClient client = new WebClient())
+            {
+                Console.WriteLine("Downloading image...");
+                byte[] imageData = client.DownloadData(imageUrl);
+                
+                using (MemoryStream ms = new MemoryStream(imageData))
+                using (Image originalImage = Image.FromStream(ms))
+                {
+                    Console.WriteLine("Resizing image to 64x64...");
+                
+                    Bitmap resizedImage = new Bitmap(64, 64);
+                    
+                    using (Graphics g = Graphics.FromImage(resizedImage))
+                    {
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.DrawImage(originalImage, 0, 0, 64, 64);
+                    }
+                    
+               
+                    resizedImage.Save(outputPath, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    Console.WriteLine($"Image saved to {outputPath}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}
