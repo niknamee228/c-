@@ -1,0 +1,51 @@
+using ConsoleApp7;
+
+internal class Program
+{
+    static async Task Main(string[] args)
+    {
+        Console.WriteLine("Hello, World!");
+        Core core = new Core();
+        try
+        {
+            long total = core.SumOfSquare();
+            Console.WriteLine($"сумма квадратов : {total}");
+        }
+        catch (Exception ex)
+        {
+            { Console.WriteLine(ex.ToString()); }
+
+        }
+        finally
+        {
+            Console.WriteLine("оки");
+        }
+        var result = await core.LoadDataAsync();
+        foreach (var item in result)
+        {
+            Console.WriteLine(item);
+        }
+        ThreadCounter counter = new ThreadCounter();
+        var threads = new Thread[5];
+        for (int i = 0; i < 5; i++)
+        {
+            threads[i] = new Thread(() =>
+            {
+                for (int j = 0; j < 1000; j++)
+                {
+                    counter.Increment();
+                }
+            });
+            threads[i].Start();
+        }
+        foreach (var thread in threads)
+        {
+            thread.Join();
+        }
+        Console.WriteLine($"финальное значение : {counter.GetCount()}");
+        Console.WriteLine("ожидаемое : 5000");
+
+        await core.Calculate();
+        await core.RunSimulationAsync();
+    }
+}
