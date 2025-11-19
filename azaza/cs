@@ -1,0 +1,214 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ConsoleApp7
+{
+    public class Core
+    {
+        List<int> numbers { get; set; }
+        private int _count = 0;
+        private readonly object _lockObject = new object();
+        public Core()
+        {
+            this.numbers = Enumerable.Range(1,100).ToList();        
+        }
+        public Core(List<int> numbers)
+        {
+            this.numbers = numbers;
+        }
+        public void Increment()
+        {
+            lock (_lockObject)
+            {
+                _count++;
+            }
+        }
+
+        public int GetCount()
+        {
+            lock (_lockObject)
+            {
+                return _count;
+            }
+        }
+        public long SumOfSquare()
+        {
+            if(numbers ==  null || numbers.Count == 0) return 0;
+            if (numbers.Count != 100) Console.WriteLine("мало");
+
+            int partSize = numbers.Count / 4 ;
+
+            Task<long>[] tasks = new Task<long>[4];
+
+            for (int i = 0; i < 4; i++)
+            {
+                int startIndex = i * partSize;
+                int endIndex = (i == 3) ? numbers.Count : (i + 1) * partSize;
+
+                int start = startIndex;
+                int end = endIndex;
+
+                tasks[i] = Task.Run(() =>
+                {
+                    long partialSum = 0;
+                    for (int j = start; j < end; j++)
+                    {
+                        try
+                        {
+                            if (numbers[j] < 0)
+                            {
+                                Console.WriteLine($"Обнаружено отрицательное число: {numbers[j]} (индекс {j}). Игнорируем.");
+                                continue;
+                            }
+
+                            partialSum += (long)numbers[j] * numbers[j];
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message.ToString());
+                        }
+                    }
+                    Console.WriteLine($"Задача обработала элементы с {start} по {end - 1}. Частичная сумма: {partialSum}");
+                    return partialSum;
+                });
+            }
+
+            Task.WaitAll(tasks);
+
+            long totalSum = 0;
+            foreach (var task in tasks)
+            {
+                totalSum += task.Result;
+            }
+
+            return totalSum;
+        }
+
+        public async Task<List<string>> LoadDataAsync()
+        {
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2.5));
+
+            var task1 = LoadServerAsync("Сервер1", 1000, cts.Token);
+            var task2 = LoadServerAsync("Сервер2", 2000, cts.Token);
+            var task3 = LoadServerAsync("Сервер3", 3000, cts.Token);
+
+            var tasks = new List<Task<string>> { task1, task2, task3 };
+
+            try
+            {
+
+                await Task.WhenAll(tasks);
+            }
+            catch (OperationCanceledException)
+            {
+               
+            }
+
+
+            var results = new List<string>();
+            foreach (var task in tasks)
+            {
+                if (task.IsCompletedSuccessfully)
+                    results.Add(task.Result);
+                else if (task.IsCanceled)
+                    results.Add("Загрузка отменена");
+                else
+                    results.Add("Ошибка загрузки");
+            }
+
+            return results;
+        }
+
+        private async Task<string> LoadServerAsync(string name, int delay, CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(delay, token);
+                return $"{name}: данные загружены - {delay}мс";
+            }
+            catch (OperationCanceledException op)
+            {
+                throw;
+            }
+        }
+        
+        public async Task Calculate()
+        {
+            var numbers = new double[] { 1, -4, 9 };
+            var tasks = new List<Task>();
+
+            foreach (var number in numbers)
+            {
+                var task = CalculateEx(number)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                            Console.WriteLine($"Успешно: √{number} = {t.Result}");
+                        else
+                            Console.WriteLine($"Ошибка: {t.Exception.InnerException.Message}");
+                    });
+
+                tasks.Add(task);
+            }
+
+            await Task.WhenAll(tasks);
+        }
+
+
+        
+        private Task<double> CalculateEx(double number)
+        {
+            try
+            {
+                return Task.Run(() =>
+                {
+                    return Math.Sqrt(number);
+
+                });
+            }
+            catch (ArgumentException ar)
+            {
+                throw new ArgumentException($"Число {number} отрицательное. Квадратный корень не определен.");
+            }
+            finally
+            {
+                
+            }
+        }
+        public async Task RunSimulationAsync()
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+            var task1 = RunOperationAsync("Задача 1", cts.Token);
+            var task2 = RunOperationAsync("Задача 2", cts.Token);
+
+            await Task.WhenAll(task1, task2);
+
+            Console.WriteLine($"\nЗадача 1: {task1.Result} итераций");
+            Console.WriteLine($"Задача 2: {task2.Result} итераций");
+        }
+        private async Task<int> RunOperationAsync(string name, CancellationToken token)
+        {
+            int iterations = 0;
+
+            for (int i = 1; i <= 10 && !token.IsCancellationRequested; i++)
+            {
+                await Task.Delay(500, token);
+                iterations = i;
+                Console.WriteLine($"{name}: итерация {i}");
+            }
+
+            if (token.IsCancellationRequested)
+                Console.WriteLine($"{name}: отменена после {iterations} итераций");
+            else
+                Console.WriteLine($"{name}: завершена");
+
+            return iterations;
+        }
+    }
+}
+
+    
