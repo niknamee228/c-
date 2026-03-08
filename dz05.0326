@@ -1,0 +1,246 @@
+// Задача 1: класс «Пользователь»
+class User {
+  constructor(name) {
+    this.name = name;
+  }
+
+  sayHi() {
+    console.log(`Привет, меня зовут ${this.name}`);
+  }
+}
+
+const anna = new User("Анна");
+const ivan = new User("Иван");
+
+anna.sayHi();  
+ivan.sayHi();  
+
+
+// Задача 2: Счетчик с состоянием
+class Counter {
+  constructor() {
+    this.count = 0;
+  }
+
+  increase() {
+    this.count++;
+  }
+
+  decrease() {
+    this.count--;
+  }
+
+  getCurrent() {
+    return this.count;
+  }
+}
+
+const counter = new Counter();
+counter.increase();
+counter.increase();
+counter.increase();
+counter.decrease();
+
+console.log(counter.getCurrent()); 
+
+
+// Задача 3: Наследование «Животные»
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+
+  speak() {
+    console.log("Животное издает звук");
+  }
+}
+
+class Dog extends Animal {
+  speak() {
+    console.log("Гав!");
+  }
+}
+
+const bobik = new Dog("Бобик");
+bobik.speak(); 
+
+
+// Задача 4: «Прямоугольник» (геттеры)
+class Rectangle {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+  }
+
+  get area() {
+    return this.width * this.height;
+  }
+
+  get perimeter() {
+    return 2 * (this.width + this.height);
+  }
+}
+
+const rect = new Rectangle(5, 8);
+console.log(rect.area);      
+console.log(rect.perimeter); 
+
+
+// Задача 5: Статический метод «Математика»
+class MathHelper {
+  static add(a, b) {
+    return a + b;
+  }
+
+  static multiply(a, b) {
+    return a * b;
+  }
+}
+
+console.log(MathHelper.add(2, 5));      
+console.log(MathHelper.multiply(3, 4)); 
+
+
+// Задача 6: «Кошелек» (приватное поле)
+class Wallet {
+  #balance;
+
+  constructor(initialBalance = 0) {
+    this.#balance = initialBalance;
+  }
+
+  deposit(amount) {
+    if (amount > 0) {
+      this.#balance += amount;
+    }
+  }
+
+  getBalance() {
+    return this.#balance;
+  }
+}
+
+const wallet = new Wallet(1000);
+wallet.deposit(500);
+console.log(wallet.getBalance()); 
+
+
+
+
+// Задача 7: «Товар» (сеттер)
+class Product {
+  #price = 0;
+
+  constructor(price) {
+    this.price = price; // используем сеттер
+  }
+
+  get price() {
+    return this.#price;
+  }
+
+  set price(value) {
+    if (value >= 0) {
+      this.#price = value;
+    }
+
+  }
+}
+
+const phone = new Product(25000);
+phone.price = -100;
+console.log(phone.price); 
+
+
+// Задача 8: «Библиотека»
+class Book {
+  constructor(title) {
+    this.title = title;
+    this.isRead = false;
+  }
+
+  markAsRead() {
+    this.isRead = true;
+  }
+}
+
+const books = [
+  new Book("1984"),
+  new Book("Мастер и Маргарита"),
+  new Book("Дюна")
+];
+
+books[1].markAsRead();
+
+books.forEach(book => {
+  console.log(`${book.title} → ${book.isRead ? "прочитано" : "не прочитано"}`);
+});
+
+
+// Задача 9: «Заказ»
+class Item {
+  constructor(name, price) {
+    this.name = name;
+    this.price = price;
+  }
+}
+
+class Order {
+  constructor() {
+    this.items = [];
+  }
+
+  addItem(item) {
+    if (item instanceof Item) {
+      this.items.push(item);
+    }
+  }
+
+  getTotal() {
+    return this.items.reduce((sum, item) => sum + item.price, 0);
+  }
+}
+
+const order = new Order();
+order.addItem(new Item("Ноутбук", 85000));
+order.addItem(new Item("Мышь", 1200));
+order.addItem(new Item("Коврик", 800));
+
+console.log("Итого:", order.getTotal()); 
+
+
+// Задача 10: Мини-проект «Список задач»
+class TodoList {
+  #tasks = [];
+
+  addTask(text) {
+    this.#tasks.push(text);
+  }
+
+  removeTask(index) {
+    if (index >= 0 && index < this.#tasks.length) {
+      this.#tasks.splice(index, 1);
+    }
+  }
+
+  listTasks() {
+    if (this.#tasks.length === 0) {
+      console.log("Список задач пуст");
+      return;
+    }
+
+    this.#tasks.forEach((task, i) => {
+      console.log(`${i + 1}. ${task}`);
+    });
+  }
+}
+
+const todo = new TodoList();
+todo.addTask("Купить молоко");
+todo.addTask("Позвонить маме");
+todo.addTask("Сдать отчёт");
+
+todo.removeTask(1); 
+
+console.log("Текущие задачи:");
+todo.listTasks();
