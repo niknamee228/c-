@@ -1,0 +1,1864 @@
+FlowerWorld — Scripts (TypeScript / React)
+
+
+================================================================
+FILE: artifacts/flower-shop/src/main.tsx
+================================================================
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(<App />);
+
+
+================================================================
+FILE: artifacts/flower-shop/src/App.tsx
+================================================================
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
+import Home from "@/pages/Home";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import FlowerDetail from "@/pages/FlowerDetail";
+import Cart from "@/pages/Cart";
+import Balance from "@/pages/Balance";
+import Orders from "@/pages/Orders";
+import Admin from "@/pages/Admin";
+import NotFound from "@/pages/not-found";
+import Navbar from "@/components/layout/Navbar";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 30_000 },
+  },
+});
+
+function Router() {
+  return (
+    <>
+      <Navbar />
+      <main>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/flowers/:id" component={FlowerDetail} />
+          <Route path="/cart" component={Cart} />
+          <Route path="/balance" component={Balance} />
+          <Route path="/orders" component={Orders} />
+          <Route path="/admin" component={Admin} />
+          <Route path="/login" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <Router />
+      </WouterRouter>
+      <Toaster richColors position="top-right" />
+    </QueryClientProvider>
+  );
+}
+
+export default App;
+
+
+================================================================
+FILE: artifacts/flower-shop/src/lib/utils.ts
+================================================================
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/components/layout/Navbar.tsx
+================================================================
+import { Link, useLocation } from "wouter";
+import { ShoppingCart, Wallet, Package, Shield, LogOut, LogIn, UserPlus, Flower2 } from "lucide-react";
+import { useGetCurrentUser, useLogout, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+export default function Navbar() {
+  const [location, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const { data } = useGetCurrentUser();
+  const user = data?.user ?? null;
+  const logout = useLogout({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+        toast.success("Вы вышли из системы");
+        navigate("/");
+      },
+    },
+  });
+
+  return (
+    <nav className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
+        <Link href="/" className="flex items-center gap-2 mr-4">
+          <Flower2 className="h-6 w-6 text-primary" />
+          <span className="text-xl font-bold text-primary" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            FlowerWorld
+          </span>
+        </Link>
+
+        <div className="flex-1" />
+
+        {user ? (
+          <>
+            <span className="text-sm text-muted-foreground hidden md:block">
+              Привет, <strong className="text-foreground">{user.username}</strong>
+            </span>
+            <Link href="/balance">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <Wallet className="h-4 w-4" />
+                <span className="hidden md:inline">Баланс:</span>
+                <Badge variant="secondary">{user.balance.toFixed(0)} ₽</Badge>
+              </Button>
+            </Link>
+            <Link href="/cart">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden md:inline">Корзина</span>
+              </Button>
+            </Link>
+            <Link href="/orders">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <Package className="h-4 w-4" />
+                <span className="hidden md:inline">Заказы</span>
+              </Button>
+            </Link>
+            {user.isAdmin && (
+              <Link href="/admin">
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden md:inline">Админ</span>
+                </Button>
+              </Link>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => logout.mutate(undefined as unknown as void)}
+              disabled={logout.isPending}
+              className="gap-1.5"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden md:inline">Выйти</span>
+            </Button>
+          </>
+        ) : (
+          <>
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <LogIn className="h-4 w-4" />
+                Войти
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm" className="gap-1.5">
+                <UserPlus className="h-4 w-4" />
+                Регистрация
+              </Button>
+            </Link>
+          </>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/Home.tsx
+================================================================
+import { useState } from "react";
+import { Link } from "wouter";
+import {
+  useListFlowers,
+  useGetFeaturedFlowers,
+  useGetCategories,
+  useGetCountries,
+  useAddToCart,
+  useGetCurrentUser,
+  getGetCartQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ShoppingCart, MapPin, Tag, Star, Search, Flower2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+
+function FlowerCard({ flower, onAddToCart, isLoading }: {
+  flower: { id: number; name: string; description: string; price: number; imageUrl: string | null; country: string | null; category: string | null; inStock: boolean };
+  onAddToCart: (id: number) => void;
+  isLoading: boolean;
+}) {
+  return (
+    <Card className="group overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col">
+      <Link href={`/flowers/${flower.id}`}>
+        <div className="aspect-square bg-muted overflow-hidden">
+          {flower.imageUrl ? (
+            <img
+              src={flower.imageUrl}
+              alt={flower.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1487530811015-780f2b26c9c0?w=400";
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Flower2 className="h-16 w-16 text-muted-foreground opacity-30" />
+            </div>
+          )}
+        </div>
+      </Link>
+      <CardContent className="p-4 flex-1">
+        <Link href={`/flowers/${flower.id}`}>
+          <h3 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
+            {flower.name}
+          </h3>
+        </Link>
+        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{flower.description}</p>
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          {flower.country && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="h-3 w-3" /> {flower.country}
+            </span>
+          )}
+          {flower.category && (
+            <Badge variant="secondary" className="text-xs">{flower.category}</Badge>
+          )}
+        </div>
+      </CardContent>
+      <CardFooter className="p-4 pt-0 flex items-center justify-between">
+        <span className="text-lg font-bold text-primary">{flower.price.toFixed(0)} ₽</span>
+        <Button size="sm" onClick={() => onAddToCart(flower.id)} disabled={isLoading} className="gap-1.5">
+          <ShoppingCart className="h-4 w-4" />
+          В корзину
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export default function Home() {
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: userData } = useGetCurrentUser();
+  const user = userData?.user ?? null;
+
+  const params: Record<string, string> = {};
+  if (selectedCategory) params.category = selectedCategory;
+  if (selectedCountry) params.country = selectedCountry;
+
+  const { data: flowers = [], isLoading: flowersLoading } = useListFlowers(params);
+  const { data: featured = [] } = useGetFeaturedFlowers();
+  const { data: categories = [] } = useGetCategories();
+  const { data: countries = [] } = useGetCountries();
+
+  const addToCart = useAddToCart({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+        toast.success("Добавлено в корзину");
+      },
+      onError: (err: any) => {
+        const msg = err?.data?.error ?? "Ошибка при добавлении";
+        if (msg.includes("авториз")) {
+          toast.error("Войдите в аккаунт, чтобы добавить товар в корзину");
+        } else {
+          toast.error(msg);
+        }
+      },
+    },
+  });
+
+  const handleAddToCart = (flowerId: number) => {
+    if (!user) {
+      toast.error("Войдите в аккаунт, чтобы добавить товар в корзину");
+      return;
+    }
+    addToCart.mutate({ data: { flowerId, quantity: 1 } });
+  };
+
+  const filtered = flowers.filter((f) =>
+    search ? f.name.toLowerCase().includes(search.toLowerCase()) : true
+  );
+
+  const resetFilters = () => {
+    setSelectedCategory(null);
+    setSelectedCountry(null);
+    setSearch("");
+  };
+
+  const hasFilters = selectedCategory || selectedCountry || search;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-primary/10 via-background to-accent/20 border-b border-border py-16 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Flower2 className="h-10 w-10 text-primary" />
+            <h1 className="text-5xl font-bold text-primary" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              FlowerWorld
+            </h1>
+          </div>
+          <p className="text-xl text-muted-foreground mt-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            Международная доставка цветов — свежесть со всего мира у вас дома
+          </p>
+          <div className="relative mt-8 max-w-lg mx-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск цветов..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-card"
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-6xl mx-auto px-4 py-10">
+        {/* Featured */}
+        {!hasFilters && featured.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Star className="h-5 w-5 text-primary fill-primary" />
+              <h2 className="text-2xl font-bold" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                Премиум выбор
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {featured.slice(0, 4).map((f) => (
+                <FlowerCard key={f.id} flower={f} onAddToCart={handleAddToCart} isLoading={addToCart.isPending} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Sidebar filters */}
+          <aside className="w-full md:w-52 shrink-0 space-y-5">
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-1.5 text-sm uppercase tracking-wide text-muted-foreground">
+                <Tag className="h-3.5 w-3.5" /> Категории
+              </h3>
+              <div className="space-y-1">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${!selectedCategory ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                >
+                  Все категории
+                </button>
+                {categories.map((c) => (
+                  <button
+                    key={c.category}
+                    onClick={() => setSelectedCategory(c.category)}
+                    className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors flex justify-between items-center ${selectedCategory === c.category ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <span>{c.category}</span>
+                    <Badge variant={selectedCategory === c.category ? "outline" : "secondary"} className="text-xs">
+                      {c.count}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-1.5 text-sm uppercase tracking-wide text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5" /> Страна
+              </h3>
+              <div className="space-y-1">
+                <button
+                  onClick={() => setSelectedCountry(null)}
+                  className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${!selectedCountry ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                >
+                  Все страны
+                </button>
+                {countries.map((c) => (
+                  <button
+                    key={c.country}
+                    onClick={() => setSelectedCountry(c.country)}
+                    className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors flex justify-between items-center ${selectedCountry === c.country ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    <span>{c.country}</span>
+                    <Badge variant={selectedCountry === c.country ? "outline" : "secondary"} className="text-xs">
+                      {c.count}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {hasFilters && (
+              <Button variant="outline" size="sm" onClick={resetFilters} className="w-full">
+                Сбросить фильтры
+              </Button>
+            )}
+          </aside>
+
+          {/* Flower grid */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                {selectedCategory ?? selectedCountry ?? "Все цветы"}
+              </h2>
+              <span className="text-sm text-muted-foreground">{filtered.length} товаров</span>
+            </div>
+            {flowersLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="h-72 rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                <Flower2 className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                <p className="text-lg">Цветы не найдены</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {filtered.map((f) => (
+                  <FlowerCard key={f.id} flower={f} onAddToCart={handleAddToCart} isLoading={addToCart.isPending} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/Login.tsx
+================================================================
+import { useForm } from "react-hook-form";
+import { Link, useLocation } from "wouter";
+import { useLogin, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Flower2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+
+interface LoginForm {
+  username: string;
+  password: string;
+}
+
+export default function Login() {
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
+
+  const login = useLogin({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+        toast.success("Добро пожаловать!");
+        navigate("/");
+      },
+      onError: (err: any) => {
+        toast.error(err?.data?.error ?? "Ошибка входа");
+      },
+    },
+  });
+
+  const onSubmit = (data: LoginForm) => {
+    login.mutate({ data });
+  };
+
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-4 bg-background">
+      <Card className="w-full max-w-sm shadow-lg">
+        <CardHeader className="text-center space-y-2">
+          <div className="flex justify-center">
+            <Flower2 className="h-10 w-10 text-primary" />
+          </div>
+          <CardTitle className="text-2xl" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            Войти в аккаунт
+          </CardTitle>
+          <CardDescription>Введите ваши данные для входа</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="username">Имя пользователя</Label>
+              <Input
+                id="username"
+                placeholder="admin"
+                autoComplete="username"
+                {...register("username", { required: "Обязательное поле" })}
+              />
+              {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="current-password"
+                {...register("password", { required: "Обязательное поле" })}
+              />
+              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+            </div>
+            <Button type="submit" className="w-full" disabled={login.isPending}>
+              {login.isPending ? "Вход..." : "Войти"}
+            </Button>
+          </form>
+          <div className="mt-4 p-3 bg-muted rounded text-xs text-muted-foreground space-y-0.5">
+            <p><strong>Администратор:</strong> admin / admin123</p>
+            <p><strong>Пользователь:</strong> user / user123</p>
+          </div>
+        </CardContent>
+        <CardFooter className="text-sm text-center text-muted-foreground flex justify-center">
+          Нет аккаунта?&nbsp;
+          <Link href="/register" className="text-primary hover:underline font-medium">
+            Зарегистрироваться
+          </Link>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/Register.tsx
+================================================================
+import { useForm } from "react-hook-form";
+import { Link, useLocation } from "wouter";
+import { useRegister, getGetCurrentUserQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Flower2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+
+interface RegisterForm {
+  username: string;
+  email: string;
+  password: string;
+  confirm: string;
+}
+
+export default function Register() {
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterForm>();
+  const password = watch("password");
+
+  const registerMutation = useRegister({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+        toast.success("Аккаунт создан! Добро пожаловать в FlowerWorld!");
+        navigate("/");
+      },
+      onError: (err: any) => {
+        toast.error(err?.data?.error ?? "Ошибка при регистрации");
+      },
+    },
+  });
+
+  const onSubmit = (data: RegisterForm) => {
+    registerMutation.mutate({ data: { username: data.username, email: data.email, password: data.password } });
+  };
+
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-4 bg-background">
+      <Card className="w-full max-w-sm shadow-lg">
+        <CardHeader className="text-center space-y-2">
+          <div className="flex justify-center">
+            <Flower2 className="h-10 w-10 text-primary" />
+          </div>
+          <CardTitle className="text-2xl" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            Создать аккаунт
+          </CardTitle>
+          <CardDescription>Присоединяйтесь к FlowerWorld</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="username">Имя пользователя</Label>
+              <Input
+                id="username"
+                placeholder="ivanov"
+                autoComplete="username"
+                {...register("username", { required: "Обязательное поле", minLength: { value: 3, message: "Минимум 3 символа" } })}
+              />
+              {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="ivanov@example.com"
+                autoComplete="email"
+                {...register("email", { required: "Обязательное поле" })}
+              />
+              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                {...register("password", { required: "Обязательное поле", minLength: { value: 6, message: "Минимум 6 символов" } })}
+              />
+              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="confirm">Повторите пароль</Label>
+              <Input
+                id="confirm"
+                type="password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                {...register("confirm", {
+                  required: "Обязательное поле",
+                  validate: (v) => v === password || "Пароли не совпадают",
+                })}
+              />
+              {errors.confirm && <p className="text-xs text-destructive">{errors.confirm.message}</p>}
+            </div>
+            <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+              {registerMutation.isPending ? "Создание..." : "Зарегистрироваться"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="text-sm text-center text-muted-foreground flex justify-center">
+          Уже есть аккаунт?&nbsp;
+          <Link href="/login" className="text-primary hover:underline font-medium">
+            Войти
+          </Link>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/FlowerDetail.tsx
+================================================================
+import { useRoute, useLocation, Link } from "wouter";
+import {
+  useGetFlower,
+  useAddToCart,
+  useGetCurrentUser,
+  getGetCartQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ShoppingCart, MapPin, Tag, ArrowLeft, Flower2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+export default function FlowerDetail() {
+  const [, params] = useRoute("/flowers/:id");
+  const [, navigate] = useLocation();
+  const id = Number(params?.id);
+  const queryClient = useQueryClient();
+
+  const { data: userData } = useGetCurrentUser();
+  const user = userData?.user ?? null;
+  const { data: flower, isLoading, error } = useGetFlower(id);
+
+  const addToCart = useAddToCart({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+        toast.success("Добавлено в корзину");
+      },
+      onError: (err: any) => {
+        toast.error(err?.data?.error ?? "Ошибка");
+      },
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="aspect-square bg-muted animate-pulse rounded-xl" />
+          <div className="space-y-4">
+            <div className="h-8 bg-muted animate-pulse rounded w-3/4" />
+            <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+            <div className="h-20 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !flower) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <Flower2 className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+        <p className="text-xl text-muted-foreground">Цветок не найден</p>
+        <Link href="/">
+          <Button className="mt-4">На главную</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-10">
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/")}
+        className="mb-6 gap-2 -ml-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Назад к каталогу
+      </Button>
+
+      <div className="grid md:grid-cols-2 gap-10">
+        <div className="aspect-square overflow-hidden rounded-xl bg-muted shadow-lg">
+          {flower.imageUrl ? (
+            <img
+              src={flower.imageUrl}
+              alt={flower.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1487530811015-780f2b26c9c0?w=600";
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Flower2 className="h-24 w-24 text-muted-foreground opacity-30" />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-5">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+              {flower.name}
+            </h1>
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
+              {flower.country && (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  {flower.country}
+                </span>
+              )}
+              {flower.category && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Tag className="h-3 w-3" />
+                  {flower.category}
+                </Badge>
+              )}
+              <Badge variant={flower.inStock ? "default" : "destructive"}>
+                {flower.inStock ? "В наличии" : "Нет в наличии"}
+              </Badge>
+            </div>
+          </div>
+
+          <p className="text-muted-foreground leading-relaxed">{flower.description}</p>
+
+          <div className="border-t border-border pt-5">
+            <p className="text-4xl font-bold text-primary">{flower.price.toFixed(2)} ₽</p>
+            <p className="text-sm text-muted-foreground mt-1">за штуку</p>
+          </div>
+
+          <Button
+            size="lg"
+            className="w-full gap-2"
+            disabled={!flower.inStock || addToCart.isPending}
+            onClick={() => {
+              if (!user) {
+                toast.error("Войдите в аккаунт, чтобы добавить товар в корзину");
+                return;
+              }
+              addToCart.mutate({ data: { flowerId: flower.id, quantity: 1 } });
+            }}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {addToCart.isPending ? "Добавляем..." : flower.inStock ? "Добавить в корзину" : "Нет в наличии"}
+          </Button>
+
+          {!user && (
+            <p className="text-sm text-muted-foreground text-center">
+              <Link href="/login" className="text-primary hover:underline">Войдите</Link>, чтобы сделать заказ
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/Cart.tsx
+================================================================
+import { Link, useLocation } from "wouter";
+import {
+  useGetCart,
+  useUpdateCartItem,
+  useRemoveCartItem,
+  useCheckout,
+  useGetCurrentUser,
+  getGetCartQueryKey,
+  getGetCurrentUserQueryKey,
+  getGetBalanceQueryKey,
+  getListOrdersQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ShoppingCart, Plus, Minus, Trash2, Flower2, ArrowRight, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+export default function Cart() {
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+
+  const { data: userData } = useGetCurrentUser();
+  const user = userData?.user ?? null;
+  const { data: cart, isLoading } = useGetCart({ query: { enabled: !!user } as any });
+
+  const updateItem = useUpdateCartItem({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() }),
+      onError: () => toast.error("Ошибка обновления"),
+    },
+  });
+
+  const removeItem = useRemoveCartItem({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() }),
+      onError: () => toast.error("Ошибка удаления"),
+    },
+  });
+
+  const checkout = useCheckout({
+    mutation: {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getGetCartQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetBalanceQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
+        toast.success(`Заказ оформлен! Списано: ${data.totalCharged.toFixed(2)} ₽`);
+        navigate("/orders");
+      },
+      onError: (err: any) => {
+        toast.error(err?.data?.error ?? "Ошибка оформления заказа");
+      },
+    },
+  });
+
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <ShoppingCart className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+        <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Войдите, чтобы просмотреть корзину
+        </h2>
+        <Link href="/login">
+          <Button>Войти</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-10 space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!cart || cart.items.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+        <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Корзина пуста
+        </h2>
+        <p className="text-muted-foreground mb-6">Добавьте цветы из каталога</p>
+        <Link href="/">
+          <Button>В каталог</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const canAfford = user.balance >= (cart?.total ?? 0);
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-10">
+      <h1 className="text-3xl font-bold mb-8" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+        Корзина ({cart.itemCount} {cart.itemCount === 1 ? "позиция" : "позиции"})
+      </h1>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-3">
+          {cart.items.map((item) => (
+            <Card key={item.id}>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden shrink-0">
+                  {item.flower.imageUrl ? (
+                    <img
+                      src={item.flower.imageUrl}
+                      alt={item.flower.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1487530811015-780f2b26c9c0?w=100";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Flower2 className="h-6 w-6 text-muted-foreground opacity-40" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <Link href={`/flowers/${item.flower.id}`}>
+                    <p className="font-semibold hover:text-primary truncate">{item.flower.name}</p>
+                  </Link>
+                  <p className="text-sm text-muted-foreground">{item.flower.price.toFixed(2)} ₽ / шт.</p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => updateItem.mutate({ id: item.id, data: { action: "decrease" } })}
+                    disabled={updateItem.isPending}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="w-8 text-center font-medium">{item.quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => updateItem.mutate({ id: item.id, data: { action: "increase" } })}
+                    disabled={updateItem.isPending}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+
+                <div className="text-right shrink-0 w-20">
+                  <p className="font-semibold">{item.itemTotal.toFixed(2)} ₽</p>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+                  onClick={() => removeItem.mutate({ id: item.id })}
+                  disabled={removeItem.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Итого</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Позиций</span>
+                <span>{cart.itemCount}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-bold text-lg">
+                <span>Итого</span>
+                <span className="text-primary">{cart.total.toFixed(2)} ₽</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Ваш баланс</span>
+                <span className={canAfford ? "text-green-600" : "text-destructive"}>
+                  {user.balance.toFixed(2)} ₽
+                </span>
+              </div>
+              {!canAfford && (
+                <p className="text-xs text-destructive">
+                  Недостаточно средств.{" "}
+                  <Link href="/balance" className="underline hover:text-destructive/70">
+                    Пополнить баланс
+                  </Link>
+                </p>
+              )}
+              <Button
+                className="w-full gap-2"
+                disabled={!canAfford || checkout.isPending}
+                onClick={() => checkout.mutate(undefined as unknown as void)}
+              >
+                {checkout.isPending ? "Оформляем..." : "Оформить заказ"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/Orders.tsx
+================================================================
+import { Link } from "wouter";
+import { useListOrders, useGetCurrentUser } from "@workspace/api-client-react";
+import { Package, MapPin, Calendar, Flower2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+
+const STATUS_COLORS: Record<string, string> = {
+  "Новый": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  "В обработке": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  "Отправлен": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  "Доставлен": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  "Отменен": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+};
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export default function Orders() {
+  const { data: userData } = useGetCurrentUser();
+  const user = userData?.user ?? null;
+  const { data: orders = [], isLoading } = useListOrders({ query: { enabled: !!user } as any });
+
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+        <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Войдите, чтобы просмотреть заказы
+        </h2>
+        <Link href="/login">
+          <Button>Войти</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-10 space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-28 bg-muted animate-pulse rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      <h1 className="text-3xl font-bold mb-8" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+        Мои заказы
+      </h1>
+
+      {orders.length === 0 ? (
+        <div className="text-center py-20">
+          <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+          <p className="text-xl text-muted-foreground mb-6">У вас ещё нет заказов</p>
+          <Link href="/">
+            <Button>В каталог</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <Card key={order.id}>
+              <CardContent className="p-5 flex gap-4 items-center">
+                <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden shrink-0">
+                  {order.flower.imageUrl ? (
+                    <img
+                      src={order.flower.imageUrl}
+                      alt={order.flower.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1487530811015-780f2b26c9c0?w=100";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Flower2 className="h-6 w-6 text-muted-foreground opacity-40" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold truncate">{order.flower.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {order.quantity} шт. × {order.flower.price.toFixed(2)} ₽
+                      </p>
+                      {order.flower.country && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <MapPin className="h-3 w-3" /> {order.flower.country}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-primary">{order.totalPrice.toFixed(2)} ₽</p>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[order.status] ?? "bg-muted text-muted-foreground"}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
+                    <Calendar className="h-3 w-3" />
+                    {formatDate(order.orderDate)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/Balance.tsx
+================================================================
+import { useState } from "react";
+import { Link } from "wouter";
+import {
+  useGetBalance,
+  useTopUpBalance,
+  useGetCurrentUser,
+  getGetBalanceQueryKey,
+  getGetCurrentUserQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Wallet, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+const PRESETS = [500, 1000, 2000, 5000];
+
+export default function Balance() {
+  const queryClient = useQueryClient();
+  const [amount, setAmount] = useState("");
+
+  const { data: userData } = useGetCurrentUser();
+  const user = userData?.user ?? null;
+  const { data: balanceData } = useGetBalance({ query: { enabled: !!user } as any });
+
+  const topUp = useTopUpBalance({
+    mutation: {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getGetBalanceQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
+        toast.success(`Баланс пополнен! Новый баланс: ${data.balance.toFixed(2)} ₽`);
+        setAmount("");
+      },
+      onError: (err: any) => {
+        toast.error(err?.data?.error ?? "Ошибка пополнения");
+      },
+    },
+  });
+
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <Wallet className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+        <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Войдите, чтобы просмотреть баланс
+        </h2>
+        <Link href="/login">
+          <Button>Войти</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const handleTopUp = () => {
+    const num = parseFloat(amount);
+    if (!num || num <= 0) {
+      toast.error("Введите корректную сумму");
+      return;
+    }
+    topUp.mutate({ data: { amount: num } });
+  };
+
+  return (
+    <div className="max-w-xl mx-auto px-4 py-10">
+      <h1 className="text-3xl font-bold mb-8" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+        Баланс
+      </h1>
+
+      <Card className="mb-6 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+        <CardContent className="p-6 flex items-center gap-4">
+          <div className="p-3 bg-primary/10 rounded-full">
+            <Wallet className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Текущий баланс</p>
+            <p className="text-4xl font-bold text-primary">
+              {(balanceData?.balance ?? user.balance).toFixed(2)} ₽
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Пополнить баланс</CardTitle>
+          <CardDescription>Выберите сумму или введите вручную</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-4 gap-2">
+            {PRESETS.map((p) => (
+              <Button
+                key={p}
+                variant={amount === String(p) ? "default" : "outline"}
+                onClick={() => setAmount(String(p))}
+                className="text-sm"
+              >
+                {p} ₽
+              </Button>
+            ))}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="amount">Сумма пополнения (₽)</Label>
+            <Input
+              id="amount"
+              type="number"
+              placeholder="Введите сумму"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              min="1"
+            />
+          </div>
+          <Button
+            className="w-full gap-2"
+            onClick={handleTopUp}
+            disabled={topUp.isPending || !amount}
+          >
+            <Plus className="h-4 w-4" />
+            {topUp.isPending ? "Пополняем..." : "Пополнить"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/Admin.tsx
+================================================================
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link } from "wouter";
+import {
+  useGetAdminStats,
+  useListUsers,
+  useListAllOrders,
+  useCreateFlower,
+  useDeleteFlower,
+  useUpdateOrderStatus,
+  useGetCurrentUser,
+  useGetAdminExport,
+  getListFlowersQueryKey,
+  getGetFeaturedFlowersQueryKey,
+  getGetCountriesQueryKey,
+  getGetCategoriesQueryKey,
+  getListAllOrdersQueryKey,
+  getGetAdminStatsQueryKey,
+  getGetAdminExportQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  Shield, Users, Package, TrendingUp, Flower2, Plus, BarChart2,
+  List, UserSquare, FileJson, Download, RefreshCw, Copy, Check,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+
+const ORDER_STATUSES = ["Новый", "В обработке", "Отправлен", "Доставлен", "Отменен"];
+
+const STATUS_COLORS: Record<string, string> = {
+  "Новый": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  "В обработке": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  "Отправлен": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  "Доставлен": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  "Отменен": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+};
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" });
+}
+
+interface FlowerForm {
+  name: string;
+  description: string;
+  price: number;
+  country: string;
+  category: string;
+  imageUrl: string;
+}
+
+function JsonExportTab({ enabled }: { enabled: boolean }) {
+  const queryClient = useQueryClient();
+  const [copied, setCopied] = useState(false);
+
+  const { data: exportData, isLoading, dataUpdatedAt } = useGetAdminExport({
+    query: { enabled, staleTime: 0 } as any,
+  });
+
+  const jsonString = exportData
+    ? JSON.stringify(exportData, null, 2)
+    : null;
+
+  const handleCopy = () => {
+    if (!jsonString) return;
+    navigator.clipboard.writeText(jsonString).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("JSON скопирован в буфер обмена");
+    });
+  };
+
+  const handleDownload = () => {
+    if (!jsonString) return;
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `flowerworld-export-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Файл загружен");
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: getGetAdminExportQueryKey() });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header bar */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <FileJson className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-semibold text-sm">Экспорт данных магазина</p>
+                {dataUpdatedAt ? (
+                  <p className="text-xs text-muted-foreground">
+                    Сгенерировано: {new Date(dataUpdatedAt).toLocaleString("ru-RU")}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-1.5">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Обновить
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCopy} disabled={!jsonString} className="gap-1.5">
+                {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? "Скопировано" : "Копировать"}
+              </Button>
+              <Button size="sm" onClick={handleDownload} disabled={!jsonString} className="gap-1.5">
+                <Download className="h-3.5 w-3.5" />
+                Скачать .json
+              </Button>
+            </div>
+          </div>
+
+          {/* Meta summary badges */}
+          {exportData && (
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
+              <Badge variant="secondary" className="gap-1.5 text-xs py-1">
+                <Users className="h-3 w-3" />
+                {exportData.meta.totalUsers} пользователей
+              </Badge>
+              <Badge variant="secondary" className="gap-1.5 text-xs py-1">
+                <Flower2 className="h-3 w-3" />
+                {exportData.meta.totalFlowers} цветков
+              </Badge>
+              <Badge variant="secondary" className="gap-1.5 text-xs py-1">
+                <Package className="h-3 w-3" />
+                {exportData.meta.totalOrders} заказов
+              </Badge>
+              <Badge variant="secondary" className="gap-1.5 text-xs py-1">
+                <TrendingUp className="h-3 w-3" />
+                {exportData.meta.totalRevenue.toFixed(2)} ₽ выручка
+              </Badge>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* JSON viewer */}
+      <Card className="overflow-hidden">
+        <CardHeader className="py-2.5 px-4 bg-muted/50 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-destructive/60" />
+              <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
+              <div className="w-3 h-3 rounded-full bg-green-500/70" />
+            </div>
+            <span className="text-xs text-muted-foreground font-mono ml-1">
+              flowerworld-export.json
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-6 space-y-2">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="h-4 bg-muted animate-pulse rounded" style={{ width: `${40 + (i * 13) % 55}%` }} />
+              ))}
+            </div>
+          ) : jsonString ? (
+            <div className="relative">
+              <pre className="overflow-auto text-xs leading-relaxed p-5 max-h-[600px] bg-muted/20 text-foreground font-mono">
+                <JsonHighlight json={jsonString} />
+              </pre>
+            </div>
+          ) : (
+            <div className="p-10 text-center text-muted-foreground">
+              <FileJson className="h-12 w-12 mx-auto mb-3 opacity-20" />
+              <p>Нет данных</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function JsonHighlight({ json }: { json: string }) {
+  const highlighted = json
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      (match) => {
+        let cls = "text-blue-600 dark:text-blue-400"; // number
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = "text-primary font-medium"; // key
+          } else {
+            cls = "text-green-700 dark:text-green-400"; // string
+          }
+        } else if (/true|false/.test(match)) {
+          cls = "text-orange-600 dark:text-orange-400";
+        } else if (/null/.test(match)) {
+          cls = "text-muted-foreground";
+        }
+        return `<span class="${cls}">${match}</span>`;
+      }
+    );
+  return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
+}
+
+export default function Admin() {
+  const queryClient = useQueryClient();
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FlowerForm>();
+
+  const { data: userData } = useGetCurrentUser();
+  const user = userData?.user ?? null;
+
+  const { data: stats } = useGetAdminStats({ query: { enabled: !!user?.isAdmin } as any });
+  const { data: users = [] } = useListUsers({ query: { enabled: !!user?.isAdmin } as any });
+  const { data: allOrders = [], isLoading: ordersLoading } = useListAllOrders({ query: { enabled: !!user?.isAdmin } as any });
+
+  const createFlower = useCreateFlower({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListFlowersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetFeaturedFlowersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetCountriesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetCategoriesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
+        toast.success("Цветок добавлен");
+        reset();
+      },
+      onError: (err: any) => toast.error(err?.data?.error ?? "Ошибка"),
+    },
+  });
+
+  const deleteFlower = useDeleteFlower({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListFlowersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetFeaturedFlowersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
+        toast.success("Цветок удалён");
+        setDeleteId(null);
+      },
+      onError: () => toast.error("Ошибка удаления"),
+    },
+  });
+
+  const updateStatus = useUpdateOrderStatus({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListAllOrdersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
+        toast.success("Статус обновлён");
+      },
+      onError: () => toast.error("Ошибка"),
+    },
+  });
+
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <Shield className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
+        <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Войдите в систему
+        </h2>
+        <Link href="/login"><Button>Войти</Button></Link>
+      </div>
+    );
+  }
+
+  if (!user.isAdmin) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <Shield className="h-16 w-16 mx-auto mb-4 text-destructive opacity-50" />
+        <h2 className="text-2xl font-bold mb-3">Доступ запрещён</h2>
+        <p className="text-muted-foreground">У вас нет прав администратора</p>
+      </div>
+    );
+  }
+
+  const onCreateFlower = (data: FlowerForm) => {
+    createFlower.mutate({
+      data: {
+        name: data.name,
+        description: data.description,
+        price: Number(data.price),
+        country: data.country,
+        category: data.category,
+        imageUrl: data.imageUrl || null,
+      },
+    });
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="flex items-center gap-3 mb-8">
+        <Shield className="h-7 w-7 text-primary" />
+        <h1 className="text-3xl font-bold" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Панель администратора
+        </h1>
+      </div>
+
+      {/* Stats summary cards */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: "Пользователей", value: stats.totalUsers, icon: Users, color: "text-blue-600" },
+            { label: "Цветов", value: stats.totalFlowers, icon: Flower2, color: "text-green-600" },
+            { label: "Заказов", value: stats.totalOrders, icon: Package, color: "text-purple-600" },
+            { label: "Выручка", value: `${stats.totalRevenue.toFixed(0)} ₽`, icon: TrendingUp, color: "text-primary" },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <Card key={label}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={`p-2 rounded-lg bg-muted ${color}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">{label}</p>
+                  <p className="font-bold text-xl">{value}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Tabs defaultValue="orders">
+        <TabsList className="mb-6 flex-wrap">
+          <TabsTrigger value="orders" className="gap-1.5">
+            <List className="h-4 w-4" /> Заказы
+          </TabsTrigger>
+          <TabsTrigger value="flowers" className="gap-1.5">
+            <Flower2 className="h-4 w-4" /> Цветы
+          </TabsTrigger>
+          <TabsTrigger value="users" className="gap-1.5">
+            <UserSquare className="h-4 w-4" /> Пользователи
+          </TabsTrigger>
+          {stats && (
+            <TabsTrigger value="stats" className="gap-1.5">
+              <BarChart2 className="h-4 w-4" /> Статистика
+            </TabsTrigger>
+          )}
+          <TabsTrigger value="export" className="gap-1.5">
+            <FileJson className="h-4 w-4" /> JSON Экспорт
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Orders tab */}
+        <TabsContent value="orders">
+          <Card>
+            <CardHeader><CardTitle>Все заказы ({allOrders.length})</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              {ordersLoading ? (
+                <div className="p-6 space-y-3">
+                  {[...Array(4)].map((_, i) => <div key={i} className="h-12 bg-muted animate-pulse rounded" />)}
+                </div>
+              ) : allOrders.length === 0 ? (
+                <div className="p-10 text-center text-muted-foreground">Заказов нет</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {allOrders.map((order) => (
+                    <div key={order.id} className="p-4 flex items-center gap-4 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{order.flower.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          @{order.username} · {order.quantity} шт. · {order.totalPrice.toFixed(2)} ₽ · {formatDate(order.orderDate)}
+                        </p>
+                      </div>
+                      <Select
+                        value={order.status}
+                        onValueChange={(v) => updateStatus.mutate({ id: order.id, data: { status: v as any } })}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ORDER_STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Flowers tab */}
+        <TabsContent value="flowers">
+          <Card className="mb-6">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-4 w-4" /> Добавить цветок</CardTitle></CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onCreateFlower)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Название *</Label>
+                  <Input placeholder="Роза красная" {...register("name", { required: "Обязательное поле" })} />
+                  {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Цена (₽) *</Label>
+                  <Input type="number" placeholder="350" {...register("price", { required: "Обязательное поле" })} />
+                  {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Страна *</Label>
+                  <Input placeholder="Нидерланды" {...register("country", { required: "Обязательное поле" })} />
+                  {errors.country && <p className="text-xs text-destructive">{errors.country.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Категория *</Label>
+                  <Input placeholder="Розы" {...register("category", { required: "Обязательное поле" })} />
+                  {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label>Описание *</Label>
+                  <Input placeholder="Краткое описание цветка..." {...register("description", { required: "Обязательное поле" })} />
+                  {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label>URL изображения</Label>
+                  <Input placeholder="https://..." {...register("imageUrl")} />
+                </div>
+                <div className="md:col-span-2">
+                  <Button type="submit" disabled={createFlower.isPending} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    {createFlower.isPending ? "Добавляем..." : "Добавить цветок"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Users tab */}
+        <TabsContent value="users">
+          <Card>
+            <CardHeader><CardTitle>Пользователи ({users.length})</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {users.map((u) => (
+                  <div key={u.id} className="p-4 flex items-center gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{u.username}</p>
+                        {u.isAdmin && <Badge variant="secondary" className="text-xs">Админ</Badge>}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{u.email}</p>
+                    </div>
+                    <p className="font-medium text-primary">{u.balance.toFixed(2)} ₽</p>
+                    <p className="text-xs text-muted-foreground hidden md:block">{formatDate(u.createdAt)}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Stats tab */}
+        {stats && (
+          <TabsContent value="stats">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader><CardTitle>Заказы по статусу</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  {stats.ordersByStatus.map((s) => (
+                    <div key={s.status} className="flex items-center gap-3">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[s.status] ?? "bg-muted text-muted-foreground"} w-28 text-center shrink-0`}>
+                        {s.status}
+                      </span>
+                      <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${stats.totalOrders ? (s.count / stats.totalOrders) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-8 text-right">{s.count}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader><CardTitle>Последние заказы</CardTitle></CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border">
+                    {stats.recentOrders.map((o) => (
+                      <div key={o.id} className="p-3 flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{o.flower.name}</p>
+                          <p className="text-xs text-muted-foreground">@{o.username}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[o.status] ?? "bg-muted text-muted-foreground"}`}>
+                          {o.status}
+                        </span>
+                        <p className="text-sm font-bold text-primary">{o.totalPrice.toFixed(0)} ₽</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
+
+        {/* JSON Export tab */}
+        <TabsContent value="export">
+          <JsonExportTab enabled={!!user?.isAdmin} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+
+================================================================
+FILE: artifacts/flower-shop/src/pages/not-found.tsx
+================================================================
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
+
+export default function NotFound() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md mx-4">
+        <CardContent className="pt-6">
+          <div className="flex mb-4 gap-2">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+            <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
+          </div>
+
+          <p className="mt-4 text-sm text-gray-600">
+            Did you forget to add the page to the router?
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+
